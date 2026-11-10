@@ -1,0 +1,1556 @@
+[
+ {
+  "id": "aayan_hi_conversational",
+  "name": "Aayan",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "amit_hi_conversational",
+  "name": "Amit",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ashutosh_hi_conversational",
+  "name": "Ashutosh",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "kabir_hi_conversational",
+  "name": "Kabir",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "kavya_hi_conversational",
+  "name": "Kavya",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "manan_hi_conversational",
+  "name": "Manan",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "rahul_hi_conversational",
+  "name": "Rahul",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sumit_hi_conversational",
+  "name": "Sumit",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "aditya_hi_conversational",
+  "name": "Aditya",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "aditya_hi_sales",
+  "name": "Aditya",
+  "style": "sales",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "anand_hi_documentary",
+  "name": "Anand",
+  "style": "documentary",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "anand_hi_news",
+  "name": "Anand",
+  "style": "news",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "aparna_hi_customer",
+  "name": "Aparna",
+  "style": "customer",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "aparna_hi_kyc",
+  "name": "Aparna",
+  "style": "kyc",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ashok_hi_character",
+  "name": "Ashok",
+  "style": "character",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ashok_hi_news",
+  "name": "Ashok",
+  "style": "news",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "chhavi_hi_kids",
+  "name": "Chhavi",
+  "style": "kids",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ishita_hi_ads",
+  "name": "Ishita",
+  "style": "ads",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ishita_hi_edtech",
+  "name": "Ishita",
+  "style": "edtech",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ishita_hi_banking",
+  "name": "Ishita",
+  "style": "banking",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ishita_hi_ads_informal",
+  "name": "Ishita",
+  "style": "ads informal",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ishita_hi_devotional",
+  "name": "Ishita",
+  "style": "devotional",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ishita_hi_numbers",
+  "name": "Ishita",
+  "style": "numbers",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ishita_hi_social",
+  "name": "Ishita",
+  "style": "social",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "kunal_hi_kids",
+  "name": "Kunal",
+  "style": "kids",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "mahesh_hi_documentary",
+  "name": "Mahesh",
+  "style": "documentary",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "mani_hi_devotional",
+  "name": "Mani",
+  "style": "devotional",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "mani_hi_conversational",
+  "name": "Mani",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "mohit_hi_conversational",
+  "name": "Mohit",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "nachiket_hi_devotional",
+  "name": "Nachiket",
+  "style": "devotional",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "priya_hi_recovery",
+  "name": "Priya",
+  "style": "recovery",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ratan_hi_latenight",
+  "name": "Ratan",
+  "style": "latenight",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ratan_hi_customer_expressive",
+  "name": "Ratan",
+  "style": "customer expressive",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ratan_hi_documentary",
+  "name": "Ratan",
+  "style": "documentary",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ratan_hi_devotional",
+  "name": "Ratan",
+  "style": "devotional",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ratan_hi_recovery",
+  "name": "Ratan",
+  "style": "recovery",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ratan_hi_social",
+  "name": "Ratan",
+  "style": "social",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ratan_hi_sports",
+  "name": "Ratan",
+  "style": "sports",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ratan_hi_latenight_warm",
+  "name": "Ratan",
+  "style": "latenight warm",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "rehan_hi_social",
+  "name": "Rehan",
+  "style": "social",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_customer_utility",
+  "name": "Ritu",
+  "style": "customer utility",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_kids",
+  "name": "Ritu",
+  "style": "kids",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_conversation",
+  "name": "Ritu",
+  "style": "conversation",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_customer",
+  "name": "Ritu",
+  "style": "customer",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_edtech",
+  "name": "Ritu",
+  "style": "edtech",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_ads_formal",
+  "name": "Ritu",
+  "style": "ads formal",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_banking",
+  "name": "Ritu",
+  "style": "banking",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_ads_informal",
+  "name": "Ritu",
+  "style": "ads informal",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_insurance",
+  "name": "Ritu",
+  "style": "insurance",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_edtech_bot",
+  "name": "Ritu",
+  "style": "edtech bot",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_medical",
+  "name": "Ritu",
+  "style": "medical",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_sales",
+  "name": "Ritu",
+  "style": "sales",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_reels",
+  "name": "Ritu",
+  "style": "reels",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_social",
+  "name": "Ritu",
+  "style": "social",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_customer_warm",
+  "name": "Ritu",
+  "style": "customer warm",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "ritu_hi_social_lively",
+  "name": "Ritu",
+  "style": "social lively",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "roopa_hi_companion",
+  "name": "Roopa",
+  "style": "companion",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "roopa_hi_narration",
+  "name": "Roopa",
+  "style": "narration",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "roopa_hi_recovery",
+  "name": "Roopa",
+  "style": "recovery",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "roopa_hi_market",
+  "name": "Roopa",
+  "style": "market",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "roopa_hi_conversational",
+  "name": "Roopa",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sanchita_hi_assistant",
+  "name": "Sanchita",
+  "style": "assistant",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sanchita_hi_edtech",
+  "name": "Sanchita",
+  "style": "edtech",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sanchita_hi_banking",
+  "name": "Sanchita",
+  "style": "banking",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sanchita_hi_feedback",
+  "name": "Sanchita",
+  "style": "feedback",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sanchita_hi_ads_formal",
+  "name": "Sanchita",
+  "style": "ads formal",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sanchita_hi_ads_informal",
+  "name": "Sanchita",
+  "style": "ads informal",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sanchita_hi_interview",
+  "name": "Sanchita",
+  "style": "interview",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sanchita_hi_romantic",
+  "name": "Sanchita",
+  "style": "romantic",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sanchita_hi_market",
+  "name": "Sanchita",
+  "style": "market",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sanchita_hi_social",
+  "name": "Sanchita",
+  "style": "social",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sanchita_hi_kyc",
+  "name": "Sanchita",
+  "style": "kyc",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sarika_hi_conversation",
+  "name": "Sarika",
+  "style": "conversation",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shalini_hi_companion",
+  "name": "Shalini",
+  "style": "companion",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shalini_hi_social",
+  "name": "Shalini",
+  "style": "social",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shreya_hi_conversational",
+  "name": "Shreya",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shreya_hi_news",
+  "name": "Shreya",
+  "style": "news",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shruti_hi_edtech",
+  "name": "Shruti",
+  "style": "edtech",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shubh_hi_customer",
+  "name": "Shubh",
+  "style": "customer",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shubh_hi_ecomm",
+  "name": "Shubh",
+  "style": "ecomm",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shubh_hi_stories_mixed",
+  "name": "Shubh",
+  "style": "stories mixed",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shubh_hi_devotional",
+  "name": "Shubh",
+  "style": "devotional",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shubh_hi_ads",
+  "name": "Shubh",
+  "style": "ads",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shubh_hi_recovery",
+  "name": "Shubh",
+  "style": "recovery",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shubh_hi_stories_dramatic",
+  "name": "Shubh",
+  "style": "stories dramatic",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "simran_hi_assistant",
+  "name": "Simran",
+  "style": "assistant",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "simran_hi_narration",
+  "name": "Simran",
+  "style": "narration",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "simran_hi_automobile",
+  "name": "Simran",
+  "style": "automobile",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "simran_hi_conversation",
+  "name": "Simran",
+  "style": "conversation",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "simran_hi_news_breaking",
+  "name": "Simran",
+  "style": "news breaking",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "simran_hi_social_energetic",
+  "name": "Simran",
+  "style": "social energetic",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "simran_hi_social_excited",
+  "name": "Simran",
+  "style": "social excited",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "simran_hi_latenight",
+  "name": "Simran",
+  "style": "latenight",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "simran_hi_news",
+  "name": "Simran",
+  "style": "news",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "simran_hi_recovery",
+  "name": "Simran",
+  "style": "recovery",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "simran_hi_sales",
+  "name": "Simran",
+  "style": "sales",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "suchitra_hi_ecomm",
+  "name": "Suchitra",
+  "style": "ecomm",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "suhani_hi_social",
+  "name": "Suhani",
+  "style": "social",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sunny_hi_ads",
+  "name": "Sunny",
+  "style": "ads",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "sunny_hi_reels",
+  "name": "Sunny",
+  "style": "reels",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "tarun_hi_conversational",
+  "name": "Tarun",
+  "style": "conversational",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "tarun_hi_sales",
+  "name": "Tarun",
+  "style": "sales",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "chaitra_hi_customer",
+  "name": "Chaitra",
+  "style": "customer",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "shilpa_hi_narration",
+  "name": "Shilpa",
+  "style": "narration",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "tanya_hi_narration",
+  "name": "Tanya",
+  "style": "narration",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "aarti_hi_customer",
+  "name": "Aarti",
+  "style": "customer",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "advait_hi_character",
+  "name": "Advait",
+  "style": "character",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "aryaman_hi_ads",
+  "name": "Aryaman",
+  "style": "ads",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "chirag_hi_social",
+  "name": "Chirag",
+  "style": "social",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "girish_hi_devotional",
+  "name": "Girish",
+  "style": "devotional",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "mukul_hi_ads",
+  "name": "Mukul",
+  "style": "ads",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "mukul_hi_suspense",
+  "name": "Mukul",
+  "style": "suspense",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "suman_hi_companion",
+  "name": "Suman",
+  "style": "companion",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "vaibhav_hi_social",
+  "name": "Vaibhav",
+  "style": "social",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "vandana_hi_ecomm",
+  "name": "Vandana",
+  "style": "ecomm",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "vipul_hi_social",
+  "name": "Vipul",
+  "style": "social",
+  "language": "hi-IN",
+  "group": "Hindi"
+ },
+ {
+  "id": "aditi_en_stories",
+  "name": "Aditi",
+  "style": "stories",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "aparna_en_companion",
+  "name": "Aparna",
+  "style": "companion",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "aparna_en_edtech",
+  "name": "Aparna",
+  "style": "edtech",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ashwin_en_sports",
+  "name": "Ashwin",
+  "style": "sports",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ashwin_en_sports_energetic",
+  "name": "Ashwin",
+  "style": "sports energetic",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "chandrika_en_stories",
+  "name": "Chandrika",
+  "style": "stories",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "dev_en_recovery",
+  "name": "Dev",
+  "style": "recovery",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "dev_en_conversational",
+  "name": "Dev",
+  "style": "conversational",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "deven_en_conversation",
+  "name": "Deven",
+  "style": "conversation",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ishita_en_customer",
+  "name": "Ishita",
+  "style": "customer",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ishita_en_medical",
+  "name": "Ishita",
+  "style": "medical",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ishita_en_numbers",
+  "name": "Ishita",
+  "style": "numbers",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ishita_en_social",
+  "name": "Ishita",
+  "style": "social",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ishita_en_stories",
+  "name": "Ishita",
+  "style": "stories",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "kalpit_en_edtech",
+  "name": "Kalpit",
+  "style": "edtech",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "nachiket_en_ads",
+  "name": "Nachiket",
+  "style": "ads",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "neha_en_customer",
+  "name": "Neha",
+  "style": "customer",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "neha_en_latenight",
+  "name": "Neha",
+  "style": "latenight",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "nupur_en_kids",
+  "name": "Nupur",
+  "style": "kids",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ojas_en_social",
+  "name": "Ojas",
+  "style": "social",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ritu_en_edtech",
+  "name": "Ritu",
+  "style": "edtech",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ritu_en_latenight",
+  "name": "Ritu",
+  "style": "latenight",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ritu_en_medical",
+  "name": "Ritu",
+  "style": "medical",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ritu_en_reels",
+  "name": "Ritu",
+  "style": "reels",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "rohan_en_recovery",
+  "name": "Rohan",
+  "style": "recovery",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "roopa_en_conversational",
+  "name": "Roopa",
+  "style": "conversational",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "rustom_en_suspense",
+  "name": "Rustom",
+  "style": "suspense",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "sanchita_en_companion",
+  "name": "Sanchita",
+  "style": "companion",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "sanchita_en_insurance",
+  "name": "Sanchita",
+  "style": "insurance",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "sanchita_en_recovery",
+  "name": "Sanchita",
+  "style": "recovery",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "sanchita_en_market",
+  "name": "Sanchita",
+  "style": "market",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "sanchita_en_social",
+  "name": "Sanchita",
+  "style": "social",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "shabana_en_edtech",
+  "name": "Shabana",
+  "style": "edtech",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "shalini_en_companion",
+  "name": "Shalini",
+  "style": "companion",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "shalini_en_customer",
+  "name": "Shalini",
+  "style": "customer",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "shubh_en_narration",
+  "name": "Shubh",
+  "style": "narration",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "shubh_en_numbers",
+  "name": "Shubh",
+  "style": "numbers",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "shubh_en_ads",
+  "name": "Shubh",
+  "style": "ads",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "shubh_en_recovery",
+  "name": "Shubh",
+  "style": "recovery",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "shubh_en_audiobook",
+  "name": "Shubh",
+  "style": "audiobook",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "shubh_en_narration_gentle",
+  "name": "Shubh",
+  "style": "narration gentle",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "shubh_en_sports",
+  "name": "Shubh",
+  "style": "sports",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "simran_en_narration",
+  "name": "Simran",
+  "style": "narration",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "simran_en_automobile",
+  "name": "Simran",
+  "style": "automobile",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "simran_en_conversation",
+  "name": "Simran",
+  "style": "conversation",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "simran_en_customer",
+  "name": "Simran",
+  "style": "customer",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "simran_en_edtech",
+  "name": "Simran",
+  "style": "edtech",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "simran_en_edtech_bot",
+  "name": "Simran",
+  "style": "edtech bot",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "simran_en_sales",
+  "name": "Simran",
+  "style": "sales",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "simran_en_recovery",
+  "name": "Simran",
+  "style": "recovery",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "simran_en_ads",
+  "name": "Simran",
+  "style": "ads",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "simran_en_therapist",
+  "name": "Simran",
+  "style": "therapist",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "sunny_en_social",
+  "name": "Sunny",
+  "style": "social",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "varun_en_ads",
+  "name": "Varun",
+  "style": "ads",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "varun_en_suspense",
+  "name": "Varun",
+  "style": "suspense",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "zarina_en_conversation",
+  "name": "Zarina",
+  "style": "conversation",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "amelia_en_conversational",
+  "name": "Amelia",
+  "style": "conversational",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "sophia_en_conversational",
+  "name": "Sophia",
+  "style": "conversational",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "girish_en_documentary",
+  "name": "Girish",
+  "style": "documentary",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "girish_en_devotional",
+  "name": "Girish",
+  "style": "devotional",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "payal_en_edtech",
+  "name": "Payal",
+  "style": "edtech",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "sarang_en_narration",
+  "name": "Sarang",
+  "style": "narration",
+  "language": "en-IN",
+  "group": "English"
+ },
+ {
+  "id": "ishita_enhi_companion",
+  "name": "Ishita",
+  "style": "companion",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "ishita_enhi_customer",
+  "name": "Ishita",
+  "style": "customer",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "ishita_enhi_customer_expressive",
+  "name": "Ishita",
+  "style": "customer expressive",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "sanchita_enhi_companion",
+  "name": "Sanchita",
+  "style": "companion",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "shalini_enhi_companion",
+  "name": "Shalini",
+  "style": "companion",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "shalini_enhi_customer",
+  "name": "Shalini",
+  "style": "customer",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "shubh_enhi_companion",
+  "name": "Shubh",
+  "style": "companion",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "shubh_enhi_ads",
+  "name": "Shubh",
+  "style": "ads",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "shubh_enhi_banking",
+  "name": "Shubh",
+  "style": "banking",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "simran_enhi_companion",
+  "name": "Simran",
+  "style": "companion",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "simran_enhi_customer",
+  "name": "Simran",
+  "style": "customer",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "simran_enhi_banking_expressive",
+  "name": "Simran",
+  "style": "banking expressive",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "sunny_enhi_customer",
+  "name": "Sunny",
+  "style": "customer",
+  "language": "en-IN",
+  "group": "Hindi-English Code-Mixed"
+ },
+ {
+  "id": "ishita_mr_conversational",
+  "name": "Ishita",
+  "style": "conversational",
+  "language": "mr-IN",
+  "group": "Marathi"
+ },
+ {
+  "id": "mrunal_mr_narration",
+  "name": "Mrunal",
+  "style": "narration",
+  "language": "mr-IN",
+  "group": "Marathi"
+ },
+ {
+  "id": "neha_mr_narration",
+  "name": "Neha",
+  "style": "narration",
+  "language": "mr-IN",
+  "group": "Marathi"
+ },
+ {
+  "id": "nilesh_mr_conversation",
+  "name": "Nilesh",
+  "style": "conversation",
+  "language": "mr-IN",
+  "group": "Marathi"
+ },
+ {
+  "id": "ritu_mr_insurance",
+  "name": "Ritu",
+  "style": "insurance",
+  "language": "mr-IN",
+  "group": "Marathi"
+ },
+ {
+  "id": "ritu_mr_narration",
+  "name": "Ritu",
+  "style": "narration",
+  "language": "mr-IN",
+  "group": "Marathi"
+ },
+ {
+  "id": "rupali_mr_stories",
+  "name": "Rupali",
+  "style": "stories",
+  "language": "mr-IN",
+  "group": "Marathi"
+ },
+ {
+  "id": "soham_mr_narration",
+  "name": "Soham",
+  "style": "narration",
+  "language": "mr-IN",
+  "group": "Marathi"
+ },
+ {
+  "id": "mukul_mr_stories",
+  "name": "Mukul",
+  "style": "stories",
+  "language": "mr-IN",
+  "group": "Marathi"
+ },
+ {
+  "id": "chaitra_kn_conversation",
+  "name": "Chaitra",
+  "style": "conversation",
+  "language": "kn-IN",
+  "group": "Kannada"
+ },
+ {
+  "id": "chaitra_kn_narration",
+  "name": "Chaitra",
+  "style": "narration",
+  "language": "kn-IN",
+  "group": "Kannada"
+ },
+ {
+  "id": "chetan_kn_conversation",
+  "name": "Chetan",
+  "style": "conversation",
+  "language": "kn-IN",
+  "group": "Kannada"
+ },
+ {
+  "id": "suchitra_kn_narration",
+  "name": "Suchitra",
+  "style": "narration",
+  "language": "kn-IN",
+  "group": "Kannada"
+ },
+ {
+  "id": "anand_pa_conversation",
+  "name": "Anand",
+  "style": "conversation",
+  "language": "pa-IN",
+  "group": "Punjabi"
+ },
+ {
+  "id": "anand_pa_customer",
+  "name": "Anand",
+  "style": "customer",
+  "language": "pa-IN",
+  "group": "Punjabi"
+ },
+ {
+  "id": "harpreet_pa_narration",
+  "name": "Harpreet",
+  "style": "narration",
+  "language": "pa-IN",
+  "group": "Punjabi"
+ },
+ {
+  "id": "jaspal_pa_banking",
+  "name": "Jaspal",
+  "style": "banking",
+  "language": "pa-IN",
+  "group": "Punjabi"
+ },
+ {
+  "id": "aravind_ta_ads",
+  "name": "Aravind",
+  "style": "ads",
+  "language": "ta-IN",
+  "group": "Tamil"
+ },
+ {
+  "id": "aravind_ta_suspense",
+  "name": "Aravind",
+  "style": "suspense",
+  "language": "ta-IN",
+  "group": "Tamil"
+ },
+ {
+  "id": "gokul_ta_narration",
+  "name": "Gokul",
+  "style": "narration",
+  "language": "ta-IN",
+  "group": "Tamil"
+ },
+ {
+  "id": "vijay_ta_narration",
+  "name": "Vijay",
+  "style": "narration",
+  "language": "ta-IN",
+  "group": "Tamil"
+ },
+ {
+  "id": "kavitha_te_conversation",
+  "name": "Kavitha",
+  "style": "conversation",
+  "language": "te-IN",
+  "group": "Telugu"
+ },
+ {
+  "id": "kavitha_te_narration",
+  "name": "Kavitha",
+  "style": "narration",
+  "language": "te-IN",
+  "group": "Telugu"
+ },
+ {
+  "id": "pooja_te_conversation",
+  "name": "Pooja",
+  "style": "conversation",
+  "language": "te-IN",
+  "group": "Telugu"
+ },
+ {
+  "id": "tarun_te_narration",
+  "name": "Tarun",
+  "style": "narration",
+  "language": "te-IN",
+  "group": "Telugu"
+ },
+ {
+  "id": "bhavik_gu_conversation",
+  "name": "Bhavik",
+  "style": "conversation",
+  "language": "gu-IN",
+  "group": "Gujarati"
+ },
+ {
+  "id": "pooja_gu_conversational",
+  "name": "Pooja",
+  "style": "conversational",
+  "language": "gu-IN",
+  "group": "Gujarati"
+ },
+ {
+  "id": "pooja_gu_customer",
+  "name": "Pooja",
+  "style": "customer",
+  "language": "gu-IN",
+  "group": "Gujarati"
+ },
+ {
+  "id": "arnab_bn_conversation",
+  "name": "Arnab",
+  "style": "conversation",
+  "language": "bn-IN",
+  "group": "Bengali"
+ },
+ {
+  "id": "roopa_bn_conversational",
+  "name": "Roopa",
+  "style": "conversational",
+  "language": "bn-IN",
+  "group": "Bengali"
+ },
+ {
+  "id": "bimal_bn_suspense",
+  "name": "Bimal",
+  "style": "suspense",
+  "language": "bn-IN",
+  "group": "Bengali"
+ }
+]
