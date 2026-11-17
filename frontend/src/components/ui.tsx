@@ -35,7 +35,7 @@ export function Badge({
 }
 
 /** Rounded square with a tinted icon: used to colour-code sections, KPIs and lists. */
-export function IconChip({ icon, tone = 'brand', size = 'md' }: { icon: IconName; tone?: Tone; size?: 'sm' | 'md' | 'lg' }) {
+export function IconChip({ icon, tone = 'gray', size = 'md' }: { icon: IconName; tone?: Tone; size?: 'sm' | 'md' | 'lg' }) {
   return (
     <span className={`icon-chip tone-${tone} ${size}`}>
       <Icon name={icon} size={size === 'lg' ? 20 : size === 'sm' ? 14 : 16} />
@@ -55,7 +55,7 @@ export function Section({
   title,
   description,
   icon,
-  tone = 'brand',
+  tone = 'gray',
   children,
   aside,
   single,

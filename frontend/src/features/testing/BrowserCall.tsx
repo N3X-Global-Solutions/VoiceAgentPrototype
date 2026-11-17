@@ -3,6 +3,7 @@ import { SmallWebRTCTransport } from '@pipecat-ai/small-webrtc-transport'
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '@/components/Icon'
 import { Badge, Stat } from '@/components/ui'
+import { LatencyBars } from '@/features/calls/LatencyBars'
 import type { Agent, Health, LatencyTurn } from '@/lib/api'
 import { latencyTone, ms } from '@/lib/format'
 import { PerceivedLatencyProbe } from './perceivedLatency'
@@ -159,9 +160,9 @@ export function BrowserCall({ agent, health, onEnded }: { agent: Agent; health: 
 
   return (
     <>
-      {health && !health.sarvam_key_set && (
+      {health && !health.provider_key_set && (
         <div className="banner tone-red">
-          <Icon name="alert" /> SARVAM_API_KEY is not set on the server. Add it to .env and restart.
+          <Icon name="alert" /> The voice AI engine isn't configured on the server yet.
         </div>
       )}
       <div className={`call-stage${connected ? ' live' : ''}`}>
@@ -173,36 +174,35 @@ export function BrowserCall({ agent, health, onEnded }: { agent: Agent; health: 
             </>
           )}
           {!busy ? (
-            <button className="call-btn" onClick={start} disabled={!health?.sarvam_key_set} title="Start call" aria-label="Start call">
-              <Icon name="phone" size={24} />
+            <button className="call-btn" onClick={start} disabled={!health?.provider_key_set} title="Start call" aria-label="Start call">
+              <Icon name="phone" size={20} />
             </button>
           ) : (
             <button className="call-btn end" onClick={stop} title="End call" aria-label="End call">
-              <Icon name="phoneOff" size={24} />
+              <Icon name="phoneOff" size={20} />
             </button>
           )}
         </div>
-        <div className="title">{STATE_LABEL[state] ?? state}</div>
-        <div className="sub">
-          {connected ? (
-            <Badge tone="green" dot>
-              Live
-            </Badge>
-          ) : busy ? (
-            <Badge tone="amber" dot>
-              Connecting
-            </Badge>
-          ) : (
-            <span>Headphones recommended · needs mic access</span>
-          )}
-          {(connected || elapsed > 0) && <span className="timer">{mmss}</span>}
-          {usage && <Badge tone="brand">₹{usage.cost_inr.toFixed(2)}</Badge>}
+        <div className="call-meta">
+          <div className="title">{STATE_LABEL[state] ?? state}</div>
+          <div className="sub">
+            {connected ? (
+              <Badge tone="green" dot>
+                Live
+              </Badge>
+            ) : busy ? (
+              <Badge tone="amber" dot>
+                Connecting
+              </Badge>
+            ) : (
+              <span>
+                Cap {cap}s · ₹{health?.max_cost_per_call_inr ?? 5} per call · use headphones
+              </span>
+            )}
+            {usage && <Badge>₹{usage.cost_inr.toFixed(2)}</Badge>}
+          </div>
         </div>
-        <div className="sub">
-          <span className="faint">
-            Cap {cap}s · ₹{health?.max_cost_per_call_inr ?? 5} per call
-          </span>
-        </div>
+        {(connected || elapsed > 0) && <span className="timer">{mmss}</span>}
       </div>
       <audio ref={audioRef} autoPlay />
       {error && (
@@ -231,63 +231,8 @@ export function BrowserCall({ agent, health, onEnded }: { agent: Agent; health: 
         <Stat label="Server p95" value={ms(summary?.p95_ms)} tone={latencyTone(summary?.p95_ms, 1200, 1700)} />
         <Stat label="Greeting" value={ms(greetingMs)} tone={latencyTone(greetingMs, 800, 1500)} />
       </div>
-      <TurnBars turns={turns} heard={heard} />
-    </>
-  )
-}
-
-/** Per-turn latency split into transcript, LLM and voice. */
-function TurnBars({ turns, heard }: { turns: LatencyTurn[]; heard: number[] }) {
-  if (turns.length === 0) {
-    return (
-      <p className="muted small" style={{ marginTop: 12 }}>
-        Per-turn latency appears after your first reply.
-      </p>
-    )
-  }
-  const scale = Math.max(1500, ...turns.map((t) => t.total_ms))
-  return (
-    <>
-      <div className="turns">
-        {turns.map((t) => {
-          const stt = t.transcript_ms ?? 0
-          const llmEnd = t.llm_first_text_ms ?? stt
-          const ttsEnd = t.tts_first_audio_ms ?? t.total_ms
-          const pct = (v: number) => `${Math.max(0, (v / scale) * 100)}%`
-          const h = heard[t.turn - 1]
-          return (
-            <div className="turn" key={t.turn}>
-              <span className="turn-num">#{t.turn}</span>
-              <div
-                className="bar"
-                title={`STT ${stt} ms · LLM ${llmEnd - stt} ms · TTS ${ttsEnd - llmEnd} ms${t.pause_ms ? ` · pause ${t.pause_ms} ms before` : ''}`}
-              >
-                <span className="seg-stt" style={{ width: pct(stt) }} />
-                <span className="seg-llm" style={{ width: pct(llmEnd - stt) }} />
-                <span className="seg-tts" style={{ width: pct(ttsEnd - llmEnd) }} />
-              </div>
-              <span className="turn-val">
-                <strong>{t.total_ms}</strong> ms
-                {h != null && <span className="muted"> · heard {h}</span>}
-              </span>
-            </div>
-          )
-        })}
-      </div>
-      <div className="legend">
-        <span>
-          <i className="seg-stt" />
-          Transcript
-        </span>
-        <span>
-          <i className="seg-llm" />
-          LLM
-        </span>
-        <span>
-          <i className="seg-tts" />
-          Voice
-        </span>
-        <span>“heard” = your mic quiet → agent audio</span>
+      <div style={{ marginTop: 14 }}>
+        <LatencyBars turns={turns} heard={heard} emptyText="Per-turn response times appear after your first reply." />
       </div>
     </>
   )

@@ -1,20 +1,19 @@
 import { useMemo } from 'react'
 import type { Navigate } from '@/app/routes'
-import { Icon } from '@/components/Icon'
+import { Icon, type IconName } from '@/components/Icon'
 import { Avatar, Badge, Dot, EmptyState, IconChip } from '@/components/ui'
 import { CallTable } from '@/features/calls/CallTable'
 import { agentIndex, useCalls } from '@/features/calls/useCalls'
 import type { Catalog, Client, Health } from '@/lib/api'
 import type { Tone } from '@/lib/colors'
 import { greeting, inr, latencyTone, parseDate, timeAgo } from '@/lib/format'
-import type { IconName } from '@/components/Icon'
 
 const DAYS = 14
 const HERO_WAVE = [30, 56, 84, 60, 100, 72, 46, 90, 64, 36, 70, 48, 24]
 
-type Kpi = { label: string; value: string; unit?: string; sub: string; icon: IconName; tone: Tone; dot?: Tone }
+type Kpi = { label: string; value: string; unit?: string; sub: string; icon: IconName; status?: Tone }
 
-/** Dashboard: greeting, KPIs, call volume, recent calls, system status, recent agents. */
+/** Dashboard: KPIs, call volume + system status, recent calls + recently edited agents. */
 export function OverviewPage({
   email,
   clients,
@@ -51,7 +50,6 @@ export function OverviewPage({
     return {
       total: list.length,
       today: list.filter((c) => parseDate(c.started_at).toDateString() === today).length,
-      todayKey: today,
       avgLatency: voice.length ? voice.reduce((s, c) => s + (c.latency_avg_ms ?? 0), 0) / voice.length : null,
       successRate: finished.length ? (finished.filter((c) => c.status === 'completed').length / finished.length) * 100 : null,
       spend: list.reduce((s, c) => s + c.cost_inr, 0),
@@ -60,13 +58,14 @@ export function OverviewPage({
     }
   }, [calls])
 
-  const name = email.split('@')[0].split(/[._-]/)[0]
-  const displayName = name.charAt(0).toUpperCase() + name.slice(1)
+  const first = email.split('@')[0].split(/[._-]/)[0]
+  const name = first.charAt(0).toUpperCase() + first.slice(1)
+  const head = <Hero name={name} navigate={navigate} />
 
   if (clients.length === 0) {
     return (
       <>
-        <Hero name={displayName} navigate={navigate} />
+        {head}
         <div className="card">
           <EmptyState
             icon="bot"
@@ -85,26 +84,24 @@ export function OverviewPage({
   }
 
   const kpis: Kpi[] = [
-    { label: 'Active agents', value: String(agents.size), sub: `across ${clients.length} client${clients.length === 1 ? '' : 's'}`, icon: 'bot', tone: 'brand' },
-    { label: 'Calls', value: calls ? String(stats.total) : '–', sub: `${stats.today} today · ${stats.minutes.toFixed(1)} min talked`, icon: 'phone', tone: 'blue' },
+    { label: 'Active agents', value: String(agents.size), sub: `Across ${clients.length} client${clients.length === 1 ? '' : 's'}`, icon: 'bot' },
+    { label: 'Calls', value: calls ? String(stats.total) : '–', sub: `${stats.today} today · ${stats.minutes.toFixed(1)} min talked`, icon: 'phone' },
     {
-      label: 'Avg response',
+      label: 'Avg response time',
       value: stats.avgLatency != null ? Math.round(stats.avgLatency).toLocaleString() : '–',
       unit: stats.avgLatency != null ? 'ms' : undefined,
-      sub: 'server-side, voice turns',
+      sub: 'Caller stops → agent speaks',
       icon: 'timer',
-      tone: 'amber',
-      dot: latencyTone(stats.avgLatency, 1000, 1400),
+      status: latencyTone(stats.avgLatency, 1000, 1400),
     },
     {
       label: 'Success rate',
       value: stats.successRate != null ? stats.successRate.toFixed(0) : '–',
       unit: stats.successRate != null ? '%' : undefined,
-      sub: 'calls completed without error',
+      sub: 'Calls completed without error',
       icon: 'check',
-      tone: 'green',
     },
-    { label: 'Spend', value: inr(stats.spend), sub: 'Sarvam usage, estimated', icon: 'coins', tone: 'pink' },
+    { label: 'Usage cost', value: inr(stats.spend), sub: 'Estimated, all calls', icon: 'coins' },
   ]
   const maxDay = Math.max(1, ...stats.days.map((d) => d.count))
   const recentAgents = clients
@@ -116,16 +113,18 @@ export function OverviewPage({
 
   return (
     <>
-      <Hero name={displayName} navigate={navigate} />
+      {head}
 
       <div className="kpis">
         {kpis.map((k) => (
           <div key={k.label} className="kpi">
             <div className="kpi-top">
-              <IconChip icon={k.icon} tone={k.tone} />
-              {k.dot && <Dot tone={k.dot} />}
+              <span className="kpi-label row" style={{ gap: 7 }}>
+                {k.label}
+                {k.status && <Dot tone={k.status} />}
+              </span>
+              <IconChip icon={k.icon} size="sm" />
             </div>
-            <div className="kpi-label">{k.label}</div>
             <div className="kpi-value">
               {k.value}
               {k.unit && <small>{k.unit}</small>}
@@ -135,22 +134,21 @@ export function OverviewPage({
         ))}
       </div>
 
-      <div className="grid-2">
-        <div className="stack">
-          <div className="card">
-            <div className="card-head">
-              <IconChip icon="activity" tone="brand" />
-              <div className="grow">
-                <h3>Call volume</h3>
-                <p>Calls per day, last {DAYS} days</p>
-              </div>
-              <Badge tone="brand">{stats.days.reduce((s, d) => s + d.count, 0)} calls</Badge>
+      <div className="row-2-1">
+        <div className="card">
+          <div className="card-head">
+            <div className="grow">
+              <h3>Call volume</h3>
+              <p>Calls per day, last {DAYS} days</p>
             </div>
-            <div className="daybars" role="img" aria-label={`Calls per day over the last ${DAYS} days`}>
+            <Badge>{stats.days.reduce((s, d) => s + d.count, 0)} calls</Badge>
+          </div>
+          <div className="chart">
+            <div className="chart-grid" role="img" aria-label={`Calls per day over the last ${DAYS} days`}>
               {stats.days.map((d) => (
                 <div
                   key={d.date.toISOString()}
-                  className={`daybar${d.count === 0 ? ' zero' : ''}${d.date.toDateString() === stats.todayKey && d.count ? ' today' : ''}`}
+                  className={`daybar${d.count === 0 ? ' zero' : ''}`}
                   title={`${d.date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}: ${d.count} call${d.count === 1 ? '' : 's'}`}
                 >
                   <span style={{ height: `${(d.count / maxDay) * 100}%` }} />
@@ -163,101 +161,99 @@ export function OverviewPage({
               ))}
             </div>
           </div>
-
-          <div className="card">
-            <div className="card-head">
-              <IconChip icon="history" tone="blue" />
-              <div className="grow">
-                <h3>Recent calls</h3>
-                <p>Latest activity across all agents</p>
-              </div>
-              <button className="btn btn-soft btn-sm" onClick={() => navigate({ page: 'calls' })}>
-                View all <Icon name="arrowRight" size={14} />
-              </button>
-            </div>
-            {calls && calls.length === 0 ? (
-              <EmptyState icon="headphones" title="No calls yet">
-                Open an agent and start a browser test call.
-              </EmptyState>
-            ) : (
-              <CallTable
-                calls={(calls ?? []).slice(0, 6)}
-                agents={agents}
-                compact
-                onOpenAgent={(r) => navigate({ page: 'agent', clientId: r.clientId, agentId: r.agentId, tab: 'logs' })}
-              />
-            )}
-          </div>
         </div>
 
-        <div className="stack">
-          <div className="card">
-            <div className="card-head">
-              <IconChip icon="server" tone="green" />
-              <h3 className="grow">System status</h3>
-              <button className="btn btn-ghost btn-sm" onClick={() => navigate({ page: 'settings' })}>
-                Settings
-              </button>
-            </div>
-            <ul className="status-list">
-              <li>
-                <Dot tone={health?.sarvam_key_set ? 'green' : 'red'} pulse={health?.sarvam_key_set} />
-                <span className="label">Sarvam AI</span>
-                <Badge tone={health?.sarvam_key_set ? 'green' : 'red'}>{health?.sarvam_key_set ? 'Connected' : 'Key missing'}</Badge>
-              </li>
-              <li>
-                <Dot tone={telephony ? 'green' : 'gray'} />
-                <span className="label">Telephony</span>
-                <span className="value">{telephony || 'Not configured'}</span>
-              </li>
-              <li>
-                <Dot tone={health?.public_base_url?.startsWith('https://') ? 'green' : 'gray'} />
-                <span className="label">Public URL</span>
-                <span className="value truncate" style={{ maxWidth: 190 }}>
-                  {health?.public_base_url || 'Not set'}
-                </span>
-              </li>
-              <li>
-                <Dot tone={inbound ? 'brand' : 'gray'} />
-                <span className="label">Inbound agent</span>
-                <span className="value truncate" style={{ maxWidth: 190 }}>
-                  {inbound ? inbound.agentName : 'None'}
-                </span>
-              </li>
-            </ul>
+        <div className="card">
+          <div className="card-head">
+            <h3 className="grow">System status</h3>
+            <button className="btn btn-ghost btn-sm" onClick={() => navigate({ page: 'settings' })}>
+              Settings
+            </button>
           </div>
+          <ul className="status-list">
+            <li>
+              <Dot tone={health?.provider_key_set ? 'green' : 'red'} />
+              <span className="label">Voice AI engine</span>
+              <Badge tone={health?.provider_key_set ? 'green' : 'red'}>{health?.provider_key_set ? 'Connected' : 'Not configured'}</Badge>
+            </li>
+            <li>
+              <Dot tone={telephony ? 'green' : 'gray'} />
+              <span className="label">Telephony</span>
+              <span className="value">{telephony || 'Not configured'}</span>
+            </li>
+            <li>
+              <Dot tone={health?.public_base_url?.startsWith('https://') ? 'green' : 'gray'} />
+              <span className="label">Public URL</span>
+              <span className="value truncate" style={{ maxWidth: 200 }}>
+                {health?.public_base_url?.replace(/^https?:\/\//, '') || 'Not set'}
+              </span>
+            </li>
+            <li>
+              <Dot tone={inbound ? 'brand' : 'gray'} />
+              <span className="label">Inbound agent</span>
+              <span className="value truncate" style={{ maxWidth: 200 }}>
+                {inbound ? inbound.agentName : 'None'}
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
 
-          <div className="card">
-            <div className="card-head">
-              <IconChip icon="bot" tone="pink" />
-              <h3 className="grow">Recently edited</h3>
-              <button className="btn btn-ghost btn-sm" onClick={() => navigate({ page: 'agents' })}>
-                All agents
-              </button>
+      <div className="row-2-1">
+        <div className="card">
+          <div className="card-head">
+            <div className="grow">
+              <h3>Recent calls</h3>
+              <p>Click a call to see its transcript and details</p>
             </div>
-            <ul className="status-list">
-              {recentAgents.map(({ client, agent }) => (
-                <li key={agent.id} className="clickable" onClick={() => navigate({ page: 'agent', clientId: client.id, agentId: agent.id, tab: 'prompt' })}>
-                  <Avatar name={agent.name} seed={agent.id} square />
-                  <span className="label">
-                    <span className="cell-title truncate" style={{ display: 'block' }}>
-                      {agent.name}
-                    </span>
-                    <span className="cell-sub">
-                      {client.name} · {catalog?.languages[agent.config.language] ?? agent.config.language}
-                    </span>
-                  </span>
-                  <span className="value">{timeAgo(agent.updated_at)}</span>
-                </li>
-              ))}
-            </ul>
+            <button className="btn btn-ghost btn-sm" onClick={() => navigate({ page: 'calls' })}>
+              View all <Icon name="arrowRight" size={14} />
+            </button>
           </div>
+          {calls && calls.length === 0 ? (
+            <EmptyState icon="headphones" title="No calls yet">
+              Open an agent and start a browser test call.
+            </EmptyState>
+          ) : (
+            <CallTable
+              calls={(calls ?? []).slice(0, 6)}
+              agents={agents}
+              compact
+              onOpenAgent={(r) => navigate({ page: 'agent', clientId: r.clientId, agentId: r.agentId, tab: 'logs' })}
+            />
+          )}
+        </div>
+
+        <div className="card">
+          <div className="card-head">
+            <h3 className="grow">Recently edited agents</h3>
+            <button className="btn btn-ghost btn-sm" onClick={() => navigate({ page: 'agents' })}>
+              All agents
+            </button>
+          </div>
+          <ul className="status-list">
+            {recentAgents.map(({ client, agent }) => (
+              <li key={agent.id} className="clickable" onClick={() => navigate({ page: 'agent', clientId: client.id, agentId: agent.id, tab: 'prompt' })}>
+                <Avatar name={agent.name} seed={agent.id} square />
+                <span className="label">
+                  <span className="cell-title truncate" style={{ display: 'block' }}>
+                    {agent.name}
+                  </span>
+                  <span className="cell-sub">
+                    {client.name} · {catalog?.languages[agent.config.language] ?? agent.config.language}
+                  </span>
+                </span>
+                <span className="value nowrap">{timeAgo(agent.updated_at)}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </>
   )
 }
 
+/** Greeting banner with an animated waveform. */
 function Hero({ name, navigate }: { name: string; navigate: Navigate }) {
   return (
     <div className="hero">

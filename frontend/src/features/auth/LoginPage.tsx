@@ -35,8 +35,8 @@ export function LoginPage({ onSignedIn }: { onSignedIn: (email: string) => void 
             <Icon name="wave" size={18} />
           </span>
           <span className="brand-name">
-            Voice Agent Studio
-            <small>Conversational AI console</small>
+            VoicePilot
+            <small>Voice agent platform</small>
           </span>
         </div>
 
@@ -67,8 +67,8 @@ export function LoginPage({ onSignedIn }: { onSignedIn: (email: string) => void 
         </div>
 
         <div className="foot">
-          <span>© {YEAR} Voice Agent Studio</span>
-          <span>Powered by Sarvam AI</span>
+          <span>© {YEAR} N3X Global Solutions</span>
+          <span>VoicePilot console</span>
         </div>
       </aside>
 
@@ -78,7 +78,7 @@ export function LoginPage({ onSignedIn }: { onSignedIn: (email: string) => void 
             <span className="brand-mark">
               <Icon name="wave" size={18} />
             </span>
-            <span className="brand-name">Voice Agent Studio</span>
+            <span className="brand-name">VoicePilot</span>
           </div>
 
           <h1>Welcome back</h1>

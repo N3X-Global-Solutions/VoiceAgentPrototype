@@ -1,35 +1,78 @@
-/* App shell: dark sidebar, top bar, page frame, floating save bar. */
+/* App shell: collapsible dark sidebar, top bar, page frame, floating save bar.
+
+   Sidebar modes (desktop):
+   - .shell.pinned     sidebar stays open; content sits beside it.
+   - .shell.collapsed  68px icon rail; hovering (or keyboard focus via Tab) expands it OVER the content.
+     Mouse clicks inside don't keep it open: only :focus-visible counts, not plain focus.
+   Icons sit at the same x-position in both widths, so nothing jumps when it expands. */
 
 .shell {
-  display: grid;
-  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  --sidebar-current: var(--sidebar-open);
   min-height: 100vh;
+}
+
+.shell.collapsed {
+  --sidebar-current: var(--sidebar-rail);
 }
 
 /* ---------------------------------------------------------------- sidebar */
 
 .sidebar {
-  position: sticky;
-  top: 0;
-  height: 100vh;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 40;
+  width: var(--sidebar-open);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 18px 14px 14px;
-  background:
-    radial-gradient(120% 50% at 0% 0%, rgba(124, 108, 255, 0.22), transparent 60%),
-    radial-gradient(80% 40% at 100% 100%, rgba(255, 107, 74, 0.1), transparent 60%),
-    linear-gradient(180deg, var(--side-bg-2), var(--side-bg));
+  padding: 14px;
+  background: var(--side-bg);
   color: var(--side-text);
-  z-index: 30;
-  overflow-y: auto;
+  border-right: 1px solid var(--side-border);
+  overflow: hidden;
+  transition:
+    width 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.shell.collapsed .sidebar {
+  width: var(--sidebar-rail);
+}
+
+.shell.collapsed .sidebar:hover,
+.shell.collapsed .sidebar:has(:focus-visible) {
+  width: var(--sidebar-open);
+  box-shadow: var(--shadow-lg);
+  transition-delay: 0.12s; /* don't flash open when the pointer just passes by */
+}
+
+/* Text that disappears in the rail */
+.side-label {
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.shell.collapsed .sidebar:not(:hover):not(:has(:focus-visible)) .side-label,
+.shell.collapsed .sidebar:not(:hover):not(:has(:focus-visible)) .count,
+.shell.collapsed .sidebar:not(:hover):not(:has(:focus-visible)) .rail-hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  margin-bottom: 18px;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 4px 6px 18px;
+  flex: 1;
+  min-width: 0;
+  padding: 0 4px;
   color: #fff;
   border: 0;
   background: none;
@@ -41,20 +84,19 @@
 .brand-mark {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 11px;
-  background: var(--grad-brand);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--brand);
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 6px 16px -4px rgba(124, 108, 255, 0.7);
 }
 
 .brand-name {
   font-weight: 750;
-  font-size: 15px;
+  font-size: 15.5px;
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .brand-name small {
@@ -65,9 +107,39 @@
   color: var(--side-muted);
 }
 
+.pin-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--side-muted);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    opacity 0.15s;
+}
+
+.pin-btn:hover {
+  background: var(--side-hover);
+  color: #fff;
+}
+
+.pin-btn.on {
+  color: #5eead4;
+}
+
 .sidebar .create-btn {
-  margin: 0 0 10px;
+  justify-content: flex-start;
+  gap: 10px;
   height: 40px;
+  padding: 0 12px;
+  margin-bottom: 8px;
+  overflow: hidden;
 }
 
 .nav {
@@ -77,22 +149,25 @@
 }
 
 .nav-label {
-  padding: 16px 12px 7px;
+  display: block;
+  height: 30px;
+  padding: 14px 12px 0;
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--side-muted);
+  white-space: nowrap;
 }
 
 .nav-item {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
   height: 38px;
   padding: 0 12px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   color: var(--side-text);
   font: inherit;
   font-weight: 550;
@@ -101,6 +176,7 @@
   background: none;
   cursor: pointer;
   text-align: left;
+  white-space: nowrap;
   transition:
     background 0.15s,
     color 0.15s;
@@ -117,47 +193,38 @@
   font-weight: 650;
 }
 
-.nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: -14px;
-  top: 9px;
-  bottom: 9px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: linear-gradient(180deg, #8b7cff, #c04ef0);
-}
-
 .nav-item.active .icon {
-  color: #a99dff;
+  color: #5eead4;
 }
 
 .nav-item .count {
   margin-left: auto;
   min-width: 22px;
   height: 20px;
-  padding: 0 7px;
-  border-radius: 10px;
+  padding: 0 6px;
+  border-radius: 6px;
   display: inline-grid;
   place-items: center;
   font-size: 11px;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.07);
   color: var(--side-text);
   font-variant-numeric: tabular-nums;
+  transition: opacity 0.15s;
 }
 
 .sidebar-foot {
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   padding-top: 14px;
 }
 
 .sidebar .theme-toggle {
   display: flex;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
+  transition: opacity 0.15s;
 }
 
 .sidebar .theme-toggle button {
@@ -171,7 +238,7 @@
 }
 
 .sidebar .theme-toggle button.active {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
   box-shadow: none;
 }
@@ -180,10 +247,16 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 6px;
+  border-radius: var(--radius);
   border: 1px solid var(--side-border);
+  background: rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+}
+
+.shell.collapsed .sidebar:not(:hover):not(:has(:focus-visible)) .user-card {
+  border-color: transparent;
+  background: none;
 }
 
 .user-card .email {
@@ -204,7 +277,7 @@
 }
 
 .user-card .btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--side-hover);
   color: #fff;
 }
 
@@ -212,8 +285,11 @@
 
 .main {
   min-width: 0;
+  margin-left: var(--sidebar-current);
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left 0.2s ease;
 }
 
 .topbar {
@@ -226,8 +302,8 @@
   height: var(--topbar-h);
   padding: 0 32px;
   border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: saturate(1.5) blur(12px);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
 }
 
 .topbar .menu-btn {
@@ -261,7 +337,7 @@
 }
 
 .crumbs button:hover {
-  color: var(--brand-text);
+  color: var(--text);
 }
 
 .crumbs .current {
@@ -273,25 +349,17 @@
   color: var(--faint);
 }
 
-.topbar-right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .page {
   width: 100%;
-  max-width: 1440px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 30px 32px 120px;
-  animation: rise 0.25s ease-out;
+  padding: 28px 32px 120px;
 }
 
 .page-head {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   gap: 16px;
   margin-bottom: 24px;
   flex-wrap: wrap;
@@ -300,24 +368,22 @@
 .page-head .eyebrow {
   display: block;
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--brand-text);
-  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 4px;
 }
 
 .page-head h1 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 750;
-  letter-spacing: -0.035em;
-  line-height: 1.15;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
 }
 
 .page-head p {
   color: var(--muted);
-  margin-top: 6px;
-  max-width: 640px;
+  margin-top: 4px;
+  max-width: 680px;
 }
 
 .splash {
@@ -335,21 +401,21 @@
 
 .save-bar {
   position: fixed;
-  left: calc(50% + var(--sidebar-w) / 2);
-  bottom: 22px;
+  left: calc(50% + var(--sidebar-current) / 2);
+  bottom: 20px;
   transform: translateX(-50%);
-  z-index: 40;
+  z-index: 30;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 8px 8px 18px;
-  border-radius: 14px;
-  background: #0f1124;
-  color: #e7e8f5;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--radius);
+  background: #111827;
+  color: #e5e7eb;
   box-shadow: var(--shadow-lg);
   border: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 13px;
-  width: min(660px, calc(100vw - var(--sidebar-w) - 40px));
+  width: min(640px, calc(100vw - var(--sidebar-current) - 40px));
   animation: rise 0.2s ease-out;
 }
 
@@ -358,25 +424,23 @@
   height: 8px;
   border-radius: 50%;
   background: var(--amber);
-  box-shadow: 0 0 0 4px rgba(247, 144, 9, 0.25);
   flex-shrink: 0;
 }
 
 .save-bar .pulse-dot.brand {
-  background: #8b7cff;
-  box-shadow: 0 0 0 4px rgba(124, 108, 255, 0.3);
+  background: #2dd4bf;
 }
 
 .save-bar .ok {
-  color: #4fd99a;
+  color: #6ee79a;
 }
 
 .save-bar .error {
-  color: #ff8a80;
+  color: #fca5a5;
 }
 
 .save-bar .btn-ghost {
-  color: #c3c6de;
+  color: #d1d5db;
 }
 
 .save-bar .btn-ghost:hover:not(:disabled) {
@@ -384,26 +448,39 @@
   color: #fff;
 }
 
+.save-bar .btn-primary {
+  background: #14b8a6;
+  color: #04201d;
+}
+
+.save-bar .btn-primary:hover:not(:disabled) {
+  background: #2dd4bf;
+}
+
 /* ---------------------------------------------------------------- responsive */
 
 @media (max-width: 900px) {
-  :root {
-    --sidebar-w: 0px;
+  .shell,
+  .shell.collapsed {
+    --sidebar-current: 0px;
   }
 
-  .shell {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
+  .sidebar,
+  .shell.collapsed .sidebar,
+  .shell.collapsed .sidebar:hover,
+  .shell.collapsed .sidebar:has(:focus-visible) {
     width: 272px;
     transform: translateX(-100%);
     transition: transform 0.22s ease;
     box-shadow: var(--shadow-lg);
+  }
+
+  /* On phones the drawer always shows labels. */
+  .shell.collapsed .sidebar:not(:hover):not(:has(:focus-visible)) .side-label,
+  .shell.collapsed .sidebar:not(:hover):not(:has(:focus-visible)) .count,
+  .shell.collapsed .sidebar:not(:hover):not(:has(:focus-visible)) .rail-hide {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .shell.nav-open .sidebar {
@@ -415,7 +492,11 @@
     position: fixed;
     inset: 0;
     background: var(--overlay);
-    z-index: 25;
+    z-index: 35;
+  }
+
+  .pin-btn {
+    display: none;
   }
 
   .topbar {
@@ -427,7 +508,7 @@
   }
 
   .page {
-    padding: 22px 16px 120px;
+    padding: 20px 16px 120px;
   }
 }
 
@@ -438,7 +519,7 @@
   }
 
   .page-head h1 {
-    font-size: 23px;
+    font-size: 21px;
   }
 
   .save-bar {

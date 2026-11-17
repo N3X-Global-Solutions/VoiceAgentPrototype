@@ -12,7 +12,7 @@ export function PhoneTest({ agent, health, onPlaced }: { agent: Agent; health: H
 
   const publicUrl = health?.public_base_url?.startsWith('https://')
   const configured = provider === 'twilio' ? health?.twilio_configured : health?.exotel_configured
-  const ready = configured && publicUrl && health?.sarvam_key_set
+  const ready = configured && publicUrl && health?.provider_key_set
 
   const call = async () => {
     setError('')
@@ -28,7 +28,7 @@ export function PhoneTest({ agent, health, onPlaced }: { agent: Agent; health: H
   }
 
   const items: [boolean | undefined, string][] = [
-    [health?.sarvam_key_set, 'Sarvam API key'],
+    [health?.provider_key_set, 'Voice AI engine key'],
     [publicUrl, `Public URL ${health?.public_base_url ? `(${health.public_base_url})` : '(PUBLIC_BASE_URL)'}`],
     [health?.twilio_configured, 'Twilio account + number'],
     [health?.exotel_configured, 'Exotel account + ExoPhone + flow'],

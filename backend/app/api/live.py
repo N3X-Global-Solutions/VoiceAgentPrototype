@@ -21,6 +21,7 @@ from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams
 from app.api.deps import agent_or_404
 from app.core import config
 from app.core.db import Agent, CallSession, engine, get_session, get_setting
+from app.core.errors import NO_PROVIDER_KEY
 from app.telephony import providers as telephony
 from app.voice.bot import run_agent_call
 
@@ -39,7 +40,7 @@ class PhoneCallIn(BaseModel):
 @router.post("/api/agents/{agent_id}/offer")
 async def webrtc_offer(agent_id: str, request: SmallWebRTCRequest, background_tasks: BackgroundTasks):
     if not config.SARVAM_API_KEY:
-        raise HTTPException(400, "SARVAM_API_KEY is not set in .env")
+        raise HTTPException(400, NO_PROVIDER_KEY)
     with Session(engine) as db:
         agent = agent_or_404(db, agent_id)
 

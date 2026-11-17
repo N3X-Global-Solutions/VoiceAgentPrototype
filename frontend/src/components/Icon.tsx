@@ -214,6 +214,18 @@ const PATHS: Record<string, ReactNode> = {
     </>
   ),
   hash: <path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18" />,
+  panelOpen: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M9 3v18M14 9l3 3-3 3" />
+    </>
+  ),
+  panelClose: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M9 3v18M16 15l-3-3 3-3" />
+    </>
+  ),
 }
 
 export type IconName = keyof typeof PATHS

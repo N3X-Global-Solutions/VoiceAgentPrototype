@@ -441,7 +441,7 @@ async def main():
             sys.exit(f"Admin sign-in failed ({login.status_code}): check ADMIN_EMAIL / ADMIN_PASSWORD in .env")
         AUTH_COOKIES.update(client.cookies)
         health = (await client.get(f"{args.base}/api/health")).json()
-        if not health["sarvam_key_set"] or not config.SARVAM_API_KEY:
+        if not health["provider_key_set"] or not config.SARVAM_API_KEY:
             sys.exit("SARVAM_API_KEY is missing in .env (both the backend and this script read it).")
 
         if not args.yes:

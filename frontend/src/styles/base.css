@@ -113,13 +113,6 @@ code,
   color: var(--red-text);
 }
 
-.gradient-text {
-  background: var(--grad-brand);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
 @keyframes spin {
   to {
     transform: rotate(360deg);

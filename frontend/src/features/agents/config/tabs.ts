@@ -5,8 +5,8 @@ export type ConfigTab = 'prompt' | 'voice' | 'speech' | 'call' | 'tools'
 
 export const CONFIG_TABS: TabItem<ConfigTab>[] = [
   { id: 'prompt', label: 'Prompt', icon: 'fileText' },
-  { id: 'voice', label: 'Voice & language', icon: 'globe' },
+  { id: 'voice', label: 'Voice', icon: 'globe' },
   { id: 'speech', label: 'Transcription', icon: 'mic' },
-  { id: 'call', label: 'Call settings', icon: 'sliders' },
+  { id: 'call', label: 'Behaviour', icon: 'sliders' },
   { id: 'tools', label: 'Tools', icon: 'wrench' },
 ]

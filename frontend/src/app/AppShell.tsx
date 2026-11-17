@@ -12,6 +12,17 @@ import { SettingsPage } from '@/features/settings/SettingsPage'
 import { api, type Catalog, type Client, type Health } from '@/lib/api'
 import { hashFor, viewFromHash, type Navigate, type View } from './routes'
 
+// Sidebar: pinned open, or a collapsed icon rail that expands while hovered. Remembered per browser.
+const PIN_KEY = 'sidebar-pinned'
+
+function readPinned() {
+  try {
+    return localStorage.getItem(PIN_KEY) !== 'false'
+  } catch {
+    return true
+  }
+}
+
 const NAV: { page: View['page']; label: string; icon: IconName }[] = [
   { page: 'overview', label: 'Overview', icon: 'grid' },
   { page: 'agents', label: 'Agents', icon: 'bot' },
@@ -27,6 +38,16 @@ export function AppShell({ email, onSignOut }: { email: string; onSignOut: () =>
   const [clients, setClients] = useState<Client[] | null>(null)
   const [error, setError] = useState('')
   const [navOpen, setNavOpen] = useState(false)
+  const [pinned, setPinned] = useState(readPinned)
+  const togglePinned = () =>
+    setPinned((p) => {
+      try {
+        localStorage.setItem(PIN_KEY, String(!p))
+      } catch {
+        /* storage blocked: applies for this visit only */
+      }
+      return !p
+    })
   const dirtyRef = useRef(false)
   const onDirtyChange = useCallback((d: boolean) => {
     dirtyRef.current = d
@@ -168,51 +189,76 @@ export function AppShell({ email, onSignOut }: { email: string; onSignOut: () =>
   }
 
   return (
-    <div className={`shell${navOpen ? ' nav-open' : ''}`}>
+    <div className={`shell ${pinned ? 'pinned' : 'collapsed'}${navOpen ? ' nav-open' : ''}`}>
       <div className="scrim" onClick={() => setNavOpen(false)} />
-      <aside className="sidebar">
-        <button className="brand" onClick={() => navigate({ page: 'overview' })}>
-          <span className="brand-mark">
-            <Icon name="wave" size={18} />
-          </span>
-          <span className="brand-name">
-            Voice Agent Studio
-            <small>Conversational AI console</small>
-          </span>
-        </button>
+      <aside className="sidebar" aria-label="Main navigation">
+        <div className="sidebar-top">
+          <button className="brand" onClick={() => navigate({ page: 'overview' })} title="VoicePilot">
+            <span className="brand-mark">
+              <Icon name="wave" size={18} />
+            </span>
+            <span className="brand-name side-label">
+              VoicePilot
+              <small>Voice agent platform</small>
+            </span>
+          </button>
+          <button
+            className={`pin-btn rail-hide${pinned ? ' on' : ''}`}
+            onClick={togglePinned}
+            title={pinned ? 'Collapse sidebar (opens on hover)' : 'Keep sidebar open'}
+            aria-label={pinned ? 'Collapse sidebar' : 'Keep sidebar open'}
+            aria-pressed={pinned}
+          >
+            <Icon name={pinned ? 'panelClose' : 'panelOpen'} size={17} />
+          </button>
+        </div>
 
-        <button className="btn btn-primary create-btn" onClick={() => navigate({ page: 'new' })}>
-          <Icon name="plus" size={16} /> Create agent
+        <button className="btn btn-primary create-btn" onClick={() => navigate({ page: 'new' })} title="Create agent">
+          <Icon name="plus" size={16} />
+          <span className="side-label">Create agent</span>
         </button>
 
         <nav className="nav">
-          <span className="nav-label">Workspace</span>
+          <span className="nav-label side-label">Workspace</span>
           {NAV.map((n) => (
-            <button key={n.page} className={`nav-item${activeNav === n.page ? ' active' : ''}`} onClick={() => navigate({ page: n.page } as View)}>
+            <button
+              key={n.page}
+              className={`nav-item${activeNav === n.page ? ' active' : ''}`}
+              onClick={() => navigate({ page: n.page } as View)}
+              title={n.label}
+              aria-current={activeNav === n.page ? 'page' : undefined}
+            >
               <Icon name={n.icon} size={17} />
-              {n.label}
+              <span className="side-label">{n.label}</span>
               {n.page === 'agents' && clients && <span className="count">{agentCount}</span>}
               {n.page === 'clients' && clients && <span className="count">{list.length}</span>}
             </button>
           ))}
-          <span className="nav-label">Account</span>
-          <button className={`nav-item${view.page === 'settings' ? ' active' : ''}`} onClick={() => navigate({ page: 'settings' })}>
+          <span className="nav-label side-label">Account</span>
+          <button
+            className={`nav-item${view.page === 'settings' ? ' active' : ''}`}
+            onClick={() => navigate({ page: 'settings' })}
+            title="Settings"
+            aria-current={view.page === 'settings' ? 'page' : undefined}
+          >
             <Icon name="settings" size={17} />
-            Settings
+            <span className="side-label">Settings</span>
           </button>
         </nav>
 
         <div className="sidebar-foot">
-          <ThemeToggle />
+          <div className="rail-hide">
+            <ThemeToggle />
+          </div>
           <div className="user-card">
             <Avatar name={email.split('@')[0].replace(/[._-]/g, ' ')} seed="admin" size="sm" />
-            <span className="grow">
+            <span className="grow side-label">
               <span className="email truncate" title={email}>
                 {email}
               </span>
               <span className="role">Administrator</span>
             </span>
-            <button className="btn btn-ghost btn-sm btn-icon" onClick={onSignOut} title="Sign out" aria-label="Sign out">
+            <button className="btn btn-ghost btn-sm btn-icon rail-hide" onClick={onSignOut} title="Sign out" aria-label="Sign out">
               <Icon name="logout" size={15} />
             </button>
           </div>
@@ -234,7 +280,7 @@ export function AppShell({ email, onSignOut }: { email: string; onSignOut: () =>
           </nav>
         </header>
 
-        <main className="page" key={view.page === 'agent' ? 'agent' : view.page}>
+        <main className="page">
           {error && (
             <div className="banner tone-red">
               <Icon name="alert" /> <span className="grow">{error}</span>

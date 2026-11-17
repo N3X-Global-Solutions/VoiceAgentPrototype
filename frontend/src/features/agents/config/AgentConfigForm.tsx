@@ -15,7 +15,7 @@ function looksEnglish(text: string) {
 }
 
 // Voices offered in every language, not just their own, so we can hear how they handle
-// other languages. Sarvam doesn't guarantee a voice outside its own language; listen before using it.
+// other languages. A voice outside its own language isn't guaranteed to sound right; listen before using it.
 const CROSS_LANGUAGE_VOICES = ['aparna_en_edtech']
 
 function voiceFits(v: Catalog['voices'][number], language: string) {
@@ -108,7 +108,7 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
   if (tab === 'prompt') {
     return (
       <>
-        <Section icon="chat" tone="brand" title="Greeting" description="The first thing the agent says when the call connects, spoken exactly as written." single>
+        <Section icon="chat" title="Greeting" description="The first thing the agent says when the call connects, spoken exactly as written." single>
           <Field label="Opening line">
             <textarea rows={2} value={value.greeting} onChange={(e) => set('greeting', e.target.value)} />
           </Field>
@@ -116,7 +116,7 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
         </Section>
         <Section
           icon="brain"
-          tone="pink"
+         
           title="Instructions"
           description="Persona, objective, business context, guardrails and conversation steps. Write it in English for any language: the agent replies in its configured language."
           single
@@ -141,7 +141,7 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
   if (tab === 'voice') {
     return (
       <>
-        <Section icon="globe" tone="blue" title="Language" description="The agent understands and replies in this language.">
+        <Section icon="globe" title="Language" description="The agent understands and replies in this language.">
           <Field label="Primary language">
             <select value={value.language} onChange={(e) => changeLanguage(e.target.value)}>
               {Object.entries(catalog.languages).map(([code, name]) => (
@@ -161,7 +161,7 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
           </div>
           {translateAlert}
         </Section>
-        <Section icon="headphones" tone="pink" title="Voice" description="Bulbul v4 Flash text-to-speech.">
+        <Section icon="headphones" title="Voice" description="The voice the agent speaks with.">
           <Field label="Speaker" hint={`${voices.length} voices available for ${languageName}`}>
             <select value={value.voice} onChange={(e) => set('voice', e.target.value)}>
               {voices.map((v) => (
@@ -191,13 +191,13 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
   if (tab === 'speech') {
     return (
       <>
-        <Section icon="zap" tone="amber" title="Turn detection" description="How the agent decides the caller has finished speaking." single>
+        <Section icon="zap" title="Turn detection" description="How the agent decides the caller has finished speaking." single>
           <div className="choice-cards">
             <button type="button" className={`choice${value.turn_detection === 'fast' ? ' active' : ''}`} onClick={() => set('turn_detection', 'fast')}>
-              <IconChip icon="zap" tone="amber" />
+              <IconChip icon="zap" />
               <div>
                 <strong>Fast</strong>
-                <span className="desc">Server-side pause detection. Replies in about 1.2–1.4 s.</span>
+                <span className="desc">Our server detects the pause. Replies in about 1.2–1.4 s.</span>
               </div>
             </button>
             <button
@@ -205,18 +205,18 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
               className={`choice${value.turn_detection === 'sarvam' ? ' active' : ''}`}
               onClick={() => set('turn_detection', 'sarvam')}
             >
-              <IconChip icon="wave" tone="blue" />
+              <IconChip icon="wave" />
               <div>
-                <strong>Sarvam VAD</strong>
-                <span className="desc">Sarvam detects the pause. Most robust on noisy lines, about 2.3 s.</span>
+                <strong>Robust</strong>
+                <span className="desc">The speech engine detects the pause. Best on noisy lines, about 2.3 s.</span>
               </div>
             </button>
           </div>
         </Section>
-        <Section icon="mic" tone="green" title="Recognition" description="Fine-tune speech-to-text (Saaras v4 realtime).">
+        <Section icon="mic" title="Recognition" description="Fine-tune how the caller's speech is recognised.">
           <Field label="End-of-turn pause" hint="Shorter is faster, but may cut off callers who pause mid-sentence.">
             <select value={value.end_of_speech_ms ?? ''} onChange={(e) => set('end_of_speech_ms', e.target.value ? Number(e.target.value) : null)}>
-              <option value="">{value.turn_detection === 'fast' ? 'Default (300 ms)' : "Default (Sarvam's)"}</option>
+              <option value="">{value.turn_detection === 'fast' ? 'Default (300 ms)' : 'Default (engine decides)'}</option>
               {[200, 250, 300, 400, 500, 700, 1000].map((v) => (
                 <option key={v} value={v}>
                   {v} ms
@@ -247,7 +247,7 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
   if (tab === 'call') {
     return (
       <>
-        <Section icon="sparkle" tone="brand" title="Behaviour" description="How the model responds and when the call ends.">
+        <Section icon="sparkle" title="Behaviour" description="How the model responds and when the call ends.">
           <Field
             label={
               <>
@@ -267,7 +267,7 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
             />
           </div>
         </Section>
-        <Section icon="timer" tone="amber" title="Limits" description="Guards that apply to every call this agent takes.">
+        <Section icon="timer" title="Limits" description="Guards that apply to every call this agent takes.">
           <Field label="Maximum call length" hint="In seconds. The server-wide cap still applies.">
             <input type="number" min={30} max={1800} value={value.max_call_seconds} onChange={(e) => set('max_call_seconds', Number(e.target.value))} />
           </Field>
@@ -275,7 +275,7 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
             <input type="number" min={4} max={60} value={value.idle_timeout_secs} onChange={(e) => set('idle_timeout_secs', Number(e.target.value))} />
           </Field>
         </Section>
-        <Section icon="chat" tone="coral" title="Call messages" description="Fixed phrases spoken exactly as written.">
+        <Section icon="chat" title="Call messages" description="Fixed phrases spoken exactly as written.">
           {translateAlert}
           <Field label="Goodbye message" wide>
             <input value={value.goodbye_message} onChange={(e) => set('goodbye_message', e.target.value)} />
@@ -294,7 +294,7 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
   return (
     <Section
       icon="wrench"
-      tone="green"
+     
       title="Tools"
       description="Your HTTP APIs the agent can call mid-conversation, for example to look up an order."
       aside={

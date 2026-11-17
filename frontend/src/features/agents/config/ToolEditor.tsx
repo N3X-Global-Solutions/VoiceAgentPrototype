@@ -21,9 +21,9 @@ export function ToolEditor({ tool, onChange, onRemove }: { tool: HttpTool; onCha
   return (
     <div className="tool">
       <div className="tool-head">
-        <IconChip icon="wrench" tone="green" size="sm" />
+        <IconChip icon="wrench" size="sm" />
         <code className="grow">{tool.name || 'new_tool'}</code>
-        <Badge tone={tool.method === 'GET' ? 'blue' : 'brand'}>{tool.method}</Badge>
+        <Badge>{tool.method}</Badge>
         {jsonError && <Badge tone="red">{jsonError}</Badge>}
         <button type="button" className="btn btn-ghost btn-sm btn-icon" onClick={onRemove} title="Remove tool">
           <Icon name="trash" size={14} />

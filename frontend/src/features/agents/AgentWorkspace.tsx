@@ -5,7 +5,6 @@ import { Avatar, Badge, Spinner, Tabs, type TabItem } from '@/components/ui'
 import { AgentCallLogs } from '@/features/calls/AgentCallLogs'
 import { TestPanel } from '@/features/testing/TestPanel'
 import { api, type Agent, type AgentConfig, type Catalog, type Client, type Health } from '@/lib/api'
-import { toneFor } from '@/lib/colors'
 import { timeAgo } from '@/lib/format'
 import { AgentConfigForm } from './config/AgentConfigForm'
 import { CONFIG_TABS } from './config/tabs'
@@ -79,7 +78,7 @@ export function AgentWorkspace({
 
   return (
     <>
-      <div className={`agent-hero tone-${toneFor(agent.id)}`}>
+      <div className="card agent-header">
         <Avatar name={agent.name} seed={agent.id} size="xl" />
         <div className="titles">
           <div className="eyebrow">
@@ -92,20 +91,12 @@ export function AgentWorkspace({
           </div>
           <input className="title-input" value={name} onChange={(e) => setName(e.target.value)} aria-label="Agent name" />
           <div className="meta">
-            <Badge tone="brand" icon="hash">
-              v{agent.version}
-            </Badge>
-            <Badge tone="blue" icon="globe">
-              {catalog.languages[agent.config.language]}
-            </Badge>
-            <Badge tone="pink" icon="headphones">
-              {voice ? `${voice.name} · ${voice.style}` : agent.config.voice}
-            </Badge>
-            <Badge tone="amber" icon="zap">
-              {agent.config.turn_detection === 'fast' ? 'Fast turns' : 'Sarvam VAD'}
-            </Badge>
+            <Badge icon="hash">v{agent.version}</Badge>
+            <Badge icon="globe">{catalog.languages[agent.config.language]}</Badge>
+            <Badge icon="headphones">{voice ? `${voice.name} · ${voice.style}` : agent.config.voice}</Badge>
+            <Badge icon="zap">{agent.config.turn_detection === 'fast' ? 'Fast turn-taking' : 'Robust turn-taking'}</Badge>
             {isInbound && (
-              <Badge tone="green" icon="inbound" solid>
+              <Badge tone="brand" icon="inbound">
                 Inbound agent
               </Badge>
             )}
@@ -114,12 +105,11 @@ export function AgentWorkspace({
         </div>
       </div>
 
-      <Tabs items={tabs} value={tab} onChange={(t) => navigate({ page: 'agent', clientId: client.id, agentId: agent.id, tab: t }, { replace: true })} />
-
       <div className="workspace">
-        <div>
+        <div className="workspace-main">
+          <Tabs items={tabs} value={tab} onChange={(t) => navigate({ page: 'agent', clientId: client.id, agentId: agent.id, tab: t }, { replace: true })} />
           {tab === 'logs' ? (
-            <AgentCallLogs agentId={agent.id} refreshKey={historyKey} />
+            <AgentCallLogs agent={{ agentId: agent.id, agentName: agent.name, clientId: client.id, clientName: client.name }} refreshKey={historyKey} />
           ) : (
             <div className="card">
               <AgentConfigForm catalog={catalog} value={config} onChange={setConfig} tab={tab} />

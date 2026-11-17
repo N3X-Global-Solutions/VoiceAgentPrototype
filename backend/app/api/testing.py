@@ -14,6 +14,7 @@ from app.agents.tools import openai_tools, run_http_tool
 from app.api.deps import agent_or_404
 from app.core import config
 from app.core.db import get_session
+from app.core.errors import NO_PROVIDER_KEY, public_error
 from app.voice.bot import LLM_MODEL
 
 router = APIRouter(tags=["testing"])
@@ -32,7 +33,7 @@ class TranslateIn(BaseModel):
 async def chat(agent_id: str, body: ChatIn, db: Session = Depends(get_session)):
     """Test the agent in text: same prompt and tools as a call, no audio (~Rs 0.01-0.05 per turn)."""
     if not config.SARVAM_API_KEY:
-        raise HTTPException(400, "SARVAM_API_KEY is not set in .env")
+        raise HTTPException(400, NO_PROVIDER_KEY)
     agent = agent_or_404(db, agent_id)
     cfg = AgentConfig.model_validate(agent.config)
     history = [m for m in body.messages[-20:] if m.get("role") in ("user", "assistant")]
@@ -113,9 +114,9 @@ async def _sarvam_chat(client: httpx.AsyncClient, messages: list[dict], temperat
             continue
         break
     if resp.status_code == 402:
-        raise HTTPException(402, "Sarvam credits exhausted")
+        raise HTTPException(402, public_error("insufficient credits"))
     if resp.status_code >= 300:
-        raise HTTPException(502, f"Sarvam error {resp.status_code}: {resp.text[:500]}")
+        raise HTTPException(502, public_error(f"AI provider error {resp.status_code}: {resp.text[:300]}"))
     return resp.json()
 
 
@@ -125,7 +126,7 @@ async def translate(body: TranslateIn):
     if body.language not in LANGUAGES:
         raise HTTPException(422, f"Unsupported language {body.language}")
     if not config.SARVAM_API_KEY:
-        raise HTTPException(400, "SARVAM_API_KEY is not set in .env")
+        raise HTTPException(400, NO_PROVIDER_KEY)
     texts = {k: v for k, v in body.texts.items() if v.strip()}
     if not texts or body.language == "en-IN":
         return {"texts": body.texts}

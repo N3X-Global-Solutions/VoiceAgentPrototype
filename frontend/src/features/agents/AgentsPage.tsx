@@ -3,7 +3,6 @@ import type { Navigate } from '@/app/routes'
 import { Icon } from '@/components/Icon'
 import { Avatar, Badge, EmptyState, IconChip, PageHead } from '@/components/ui'
 import type { Catalog, Client, Health } from '@/lib/api'
-import { toneFor } from '@/lib/colors'
 import { timeAgo } from '@/lib/format'
 
 /** All agents as cards, with search and a language filter. */
@@ -82,7 +81,7 @@ export function AgentsPage({ clients, catalog, health, navigate }: { clients: Cl
                 return (
                   <button
                     key={agent.id}
-                    className={`agent-card tone-${toneFor(agent.id)}`}
+                    className="agent-card"
                     onClick={() => navigate({ page: 'agent', clientId: client.id, agentId: agent.id, tab: 'prompt' })}
                   >
                     <div className="top">
@@ -92,24 +91,24 @@ export function AgentsPage({ clients, catalog, health, navigate }: { clients: Cl
                         <span className="client">{client.name}</span>
                       </div>
                       {health?.inbound_agent_id === agent.id && (
-                        <Badge tone="green" icon="inbound" title="Answers inbound calls">
+                        <Badge tone="brand" icon="inbound" title="Answers inbound calls">
                           Inbound
                         </Badge>
                       )}
                     </div>
                     <p className="greeting">“{agent.config.greeting}”</p>
                     <div className="chips">
-                      <Badge tone="blue" icon="globe">
+                      <Badge icon="globe">
                         {catalog?.languages[agent.config.language] ?? agent.config.language}
                       </Badge>
-                      <Badge tone="pink" icon="headphones">
+                      <Badge icon="headphones">
                         {v?.name ?? agent.config.voice}
                       </Badge>
-                      <Badge tone="amber" icon="zap">
-                        {agent.config.turn_detection === 'fast' ? 'Fast' : 'Sarvam VAD'}
+                      <Badge icon="zap">
+                        {agent.config.turn_detection === 'fast' ? 'Fast' : 'Robust'}
                       </Badge>
                       {agent.config.tools.length > 0 && (
-                        <Badge tone="green" icon="wrench">
+                        <Badge icon="wrench">
                           {agent.config.tools.length} tool{agent.config.tools.length === 1 ? '' : 's'}
                         </Badge>
                       )}
@@ -126,7 +125,7 @@ export function AgentsPage({ clients, catalog, health, navigate }: { clients: Cl
                 )
               })}
               <button className="agent-card new" onClick={() => navigate({ page: 'new' })}>
-                <IconChip icon="plus" tone="brand" size="lg" />
+                <IconChip icon="plus" size="lg" />
                 <strong>Create a new agent</strong>
                 <span className="small">For a new or existing client</span>
               </button>

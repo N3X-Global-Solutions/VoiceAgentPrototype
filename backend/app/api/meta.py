@@ -18,7 +18,7 @@ def healthz():
 @router.get("/api/health")
 def health():
     return {
-        "sarvam_key_set": bool(config.SARVAM_API_KEY),
+        "provider_key_set": bool(config.SARVAM_API_KEY),
         "public_base_url": config.PUBLIC_BASE_URL,
         "twilio_configured": config.twilio_configured(),
         "exotel_configured": config.exotel_configured(),

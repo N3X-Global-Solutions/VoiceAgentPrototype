@@ -27,7 +27,7 @@ export type AgentConfig = {
   nudge_message: string
   repeat_message: string
   tools: HttpTool[]
-  turn_detection: 'sarvam' | 'fast'
+  turn_detection: 'sarvam' | 'fast' // stored value; shown as "Robust" / "Fast"
   end_of_speech_ms: number | null
   important_words: string[]
 }
@@ -64,7 +64,7 @@ export type Catalog = {
 }
 
 export type Health = {
-  sarvam_key_set: boolean
+  provider_key_set: boolean
   public_base_url: string
   twilio_configured: boolean
   exotel_configured: boolean
@@ -92,6 +92,8 @@ export type CallSession = {
   phone_number: string
   status: string
   started_at: string
+  ended_at: string | null
+  provider_call_id: string
   duration_secs: number
   turns: number
   latency_avg_ms: number | null
@@ -101,6 +103,7 @@ export type CallSession = {
   stt_seconds: number
   tts_chars: number
   llm_prompt_tokens: number
+  llm_cached_tokens: number
   llm_completion_tokens: number
   cost_inr: number
   transcript: { role: 'user' | 'agent' | 'event'; text: string }[]

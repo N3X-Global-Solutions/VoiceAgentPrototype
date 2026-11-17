@@ -55,7 +55,7 @@ export function NewAgentPage({
       <div className="card" style={{ marginBottom: 20 }}>
         <Section
           icon="building"
-          tone="blue"
+         
           title="Client"
           description="The business this agent answers calls for."
           aside={
@@ -102,7 +102,7 @@ export function NewAgentPage({
             </>
           )}
         </Section>
-        <Section icon="bot" tone="brand" title="Agent" description="A name your team will recognise, e.g. “Sales & support” or “Payment reminders”." single>
+        <Section icon="bot" title="Agent" description="A name your team will recognise, e.g. “Sales & support” or “Payment reminders”." single>
           <Field label="Agent name *">
             <input value={agentName} onChange={(e) => setAgentName(e.target.value)} />
           </Field>

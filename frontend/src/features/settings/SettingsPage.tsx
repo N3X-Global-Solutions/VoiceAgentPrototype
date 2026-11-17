@@ -25,7 +25,7 @@ export function SettingsPage({
   const inbound = health?.inbound_agent_id ? agentIndex(clients).get(health.inbound_agent_id) : undefined
 
   const checks: [boolean | undefined, string, string][] = [
-    [health?.sarvam_key_set, 'Sarvam AI', health?.sarvam_key_set ? 'API key configured' : 'Set SARVAM_API_KEY in .env'],
+    [health?.provider_key_set, 'Voice AI engine', health?.provider_key_set ? 'API key configured' : "Not configured: add the provider API key to the server's .env"],
     [health?.public_base_url?.startsWith('https://'), 'Public URL', health?.public_base_url || 'Set PUBLIC_BASE_URL (needed for phone calls)'],
     [health?.twilio_configured, 'Twilio', health?.twilio_configured ? 'Account and number configured' : 'Not configured'],
     [health?.exotel_configured, 'Exotel', health?.exotel_configured ? 'Account, ExoPhone and flow configured' : 'Not configured'],
@@ -37,12 +37,12 @@ export function SettingsPage({
 
       <div className="stack">
         <div className="card">
-          <Section icon="user" tone="brand" title="Account" description="You are signed in as the workspace administrator.">
+          <Section icon="user" title="Account" description="You are signed in as the workspace administrator.">
             <div className="wide row" style={{ gap: 14 }}>
               <Avatar name={email.split('@')[0].replace(/[._-]/g, ' ')} seed="admin" size="lg" />
               <div className="grow">
                 <div className="cell-title">{email}</div>
-                <Badge tone="brand" icon="shield">
+                <Badge icon="shield">
                   Administrator
                 </Badge>
               </div>
@@ -54,7 +54,7 @@ export function SettingsPage({
               Credentials are set on the server with <code>ADMIN_EMAIL</code> and <code>ADMIN_PASSWORD</code>. Changing the password signs every session out.
             </p>
           </Section>
-          <Section icon="sun" tone="amber" title="Appearance" description="Light, dark, or follow your system setting." single>
+          <Section icon="sun" title="Appearance" description="Light, dark, or follow your system setting." single>
             <div style={{ maxWidth: 320 }}>
               <ThemeToggle labels />
             </div>
@@ -63,7 +63,7 @@ export function SettingsPage({
 
         <div className="card">
           <div className="card-head">
-            <IconChip icon="server" tone="green" />
+            <IconChip icon="server" />
             <div className="grow">
               <h3>Integrations</h3>
               <p>Read from the server's environment. Edit .env on the server and restart to change them.</p>
@@ -94,7 +94,7 @@ export function SettingsPage({
         </div>
 
         <div className="card">
-          <Section icon="link" tone="blue" title="Telephony webhooks" description="Paste these into your phone provider so calls reach your agents." single>
+          <Section icon="link" title="Telephony webhooks" description="Paste these into your phone provider so calls reach your agents." single>
             <Field label="Twilio: Voice webhook for inbound calls (HTTP POST)">
               <CopyField value={`${base}/telephony/twilio/incoming`} />
             </Field>
@@ -105,7 +105,7 @@ export function SettingsPage({
         </div>
 
         <div className="card">
-          <Section icon="shield" tone="coral" title="Credit guards" description="Server-wide limits applied to every call, whatever an agent's own settings say.">
+          <Section icon="shield" title="Credit guards" description="Server-wide limits applied to every call, whatever an agent's own settings say.">
             <Field label="Maximum call length" hint="MAX_CALL_SECONDS_CAP">
               <input value={health ? `${health.max_call_seconds_cap} seconds` : '–'} readOnly />
             </Field>

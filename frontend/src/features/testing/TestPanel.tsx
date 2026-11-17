@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Icon } from '@/components/Icon'
-import { IconChip } from '@/components/ui'
 import type { Agent, Health } from '@/lib/api'
 import { BrowserCall } from './BrowserCall'
 import { ChatTest } from './ChatTest'
@@ -13,8 +12,7 @@ export function TestPanel({ agent, health, dirty, onCallEnded }: { agent: Agent;
   return (
     <aside className="card test-panel">
       <div className="card-head">
-        <div className="row" style={{ gap: 12, flexWrap: 'nowrap' }}>
-          <IconChip icon="headphones" tone="brand" />
+        <div style={{ minWidth: 0 }}>
           <div>
             <h3>Playground</h3>
             <p title={dirty ? 'Save to test your latest edits' : undefined}>{dirty ? `Saved v${agent.version} · edits not included` : `Testing v${agent.version}`}</p>

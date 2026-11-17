@@ -51,6 +51,7 @@ from app.core import config
 from app.agents.models import AgentConfig, HttpTool
 from app.voice.call_metrics import CallMetricsObserver
 from app.core.db import Agent, CallSession, engine
+from app.core.errors import public_error
 from app.voice.stt_preroll import PrerollSarvamRealtimeSTTService
 from app.agents.tools import END_CALL_DESCRIPTION, run_http_tool
 from app.voice.tts_text import tts_text_transform
@@ -380,10 +381,10 @@ async def run_agent_call(
                 await worker.queue_frames([TTSSpeakFrame(cfg.repeat_message)])
             return
         ending = True
-        call_error = text[:500]
+        call_error = public_error(text)[:500]  # shown in call logs; the log line below keeps the raw text
         metrics.end_reason = metrics.end_reason or "Call ended: unrecoverable error (see error)."
         logger.error(f"[{call_id}] Unrecoverable error, ending call: {text[:300]}")
-        await send_to_client({"type": "error", "message": text[:300]})
+        await send_to_client({"type": "error", "message": public_error(text)[:300]})
         await worker.cancel()
 
     idle_count = 0
@@ -455,7 +456,7 @@ async def run_agent_call(
         await runner.run()
     except Exception as e:
         logger.exception(f"[{call_id}] call failed")
-        call_error = call_error or str(e)
+        call_error = call_error or public_error(str(e))
     finally:
         guard_task.cancel()
         if greet_task:
