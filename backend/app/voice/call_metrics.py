@@ -7,6 +7,7 @@ does not include the VAD silence window before Sarvam declares end of speech, no
 the network/telephony leg back to the caller.
 """
 
+import math
 import statistics
 import time
 from collections.abc import Awaitable, Callable
@@ -49,9 +50,12 @@ def _service_kind(processor: str) -> str | None:
 
 
 class CallMetricsObserver(BaseObserver):
-    def __init__(self, send: ServerMessageSender | None = None, pause_ms: int | None = None):
+    def __init__(self, send: ServerMessageSender | None = None, pause_ms: int | None = None, channel: str = "browser"):
         super().__init__(observe_every_push=False)
         self._send = send
+        # Phone channels (exotel/twilio) add a per-minute line cost; browser calls don't.
+        self.channel = channel
+        self.ended_at: float | None = None
         # Configured silence the caller must leave before their turn ends (None = unknown
         # provider default). Shown next to each turn: it is waited before the clock starts.
         self._pause_ms = pause_ms
@@ -77,16 +81,37 @@ class CallMetricsObserver(BaseObserver):
 
     # -- cost -------------------------------------------------------------
 
-    def cost_inr(self) -> float:
+    def line_seconds(self) -> float:
+        """How long the phone line has been connected (from when the call's audio started)."""
+        start = self._connected_at if self._connected_at is not None else self.started_at
+        return max((self.ended_at or time.time()) - start, 0.0)
+
+    def cost_breakdown(self) -> dict:
+        """Cost in INR per part: speech recognition, voice, AI model and phone line."""
         uncached = max(self.llm_prompt_tokens - self.llm_cached_tokens, 0)
-        return round(
-            self.stt_seconds / 60 * config.PRICE_STT_PER_MIN
-            + self.tts_chars / 1000 * config.PRICE_TTS_PER_1K_CHARS
-            + uncached / 1e6 * config.PRICE_LLM_INPUT_PER_1M
-            + self.llm_cached_tokens / 1e6 * config.PRICE_LLM_CACHED_PER_1M
-            + self.llm_completion_tokens / 1e6 * config.PRICE_LLM_OUTPUT_PER_1M,
-            4,
-        )
+        rate, pulse = config.telephony_rate(self.channel)
+        billed_secs = math.ceil(self.line_seconds() / pulse) * pulse if rate and pulse else 0
+        return {
+            "stt": round(self.stt_seconds / 60 * config.PRICE_STT_PER_MIN, 4),
+            "tts": round(self.tts_chars / 1000 * config.PRICE_TTS_PER_1K_CHARS, 4),
+            "llm": round(
+                uncached / 1e6 * config.PRICE_LLM_INPUT_PER_1M
+                + self.llm_cached_tokens / 1e6 * config.PRICE_LLM_CACHED_PER_1M
+                + self.llm_completion_tokens / 1e6 * config.PRICE_LLM_OUTPUT_PER_1M,
+                4,
+            ),
+            "telephony": round(billed_secs / 60 * rate, 4),
+            "telephony_billed_secs": billed_secs,
+        }
+
+    def ai_cost_inr(self) -> float:
+        """Voice AI provider cost only (what the per-call credit cap protects)."""
+        b = self.cost_breakdown()
+        return round(b["stt"] + b["tts"] + b["llm"], 4)
+
+    def cost_inr(self) -> float:
+        """Total cost of the call: voice AI plus the phone line."""
+        return round(self.ai_cost_inr() + self.cost_breakdown()["telephony"], 4)
 
     def usage(self) -> dict:
         return {
@@ -96,6 +121,7 @@ class CallMetricsObserver(BaseObserver):
             "llm_cached_tokens": self.llm_cached_tokens,
             "llm_completion_tokens": self.llm_completion_tokens,
             "cost_inr": self.cost_inr(),
+            "cost_breakdown": self.cost_breakdown(),
         }
 
     def latency_summary(self) -> dict:
@@ -207,6 +233,7 @@ class CallMetricsObserver(BaseObserver):
         self.transcript.append({"role": "event", "text": text, "at": time.time()})
 
     def finish(self) -> None:
+        self.ended_at = self.ended_at or time.time()
         self._flush_bot_text()
         if self.end_reason:
             self.transcript.append({"role": "event", "text": self.end_reason, "at": time.time()})

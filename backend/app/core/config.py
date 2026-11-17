@@ -33,7 +33,8 @@ SESSION_TTL_HOURS = int(os.getenv("SESSION_TTL_HOURS", "72"))
 
 # Credit guards: every call is hard-capped, whatever the agent config says.
 MAX_CALL_SECONDS_CAP = int(os.getenv("MAX_CALL_SECONDS_CAP", "300"))
-MAX_COST_PER_CALL_INR = _float("MAX_COST_PER_CALL_INR", 5.0)
+# Voice AI cost cap per call (phone line not included). ~Rs 2.8/min at current rates, so Rs 10 ~ 3.5 min.
+MAX_COST_PER_CALL_INR = _float("MAX_COST_PER_CALL_INR", 10.0)
 
 # Phone calls: the greeting waits for the caller's first "Hello?" (or this many seconds), so it
 # isn't spoken into a line that isn't playing audio yet and lost.
@@ -53,12 +54,30 @@ EXOTEL_SUBDOMAIN = os.getenv("EXOTEL_SUBDOMAIN", "api.exotel.com")  # api.in.exo
 EXOTEL_CALLER_ID = os.getenv("EXOTEL_CALLER_ID", "")  # your ExoPhone
 EXOTEL_FLOW_APP_ID = os.getenv("EXOTEL_FLOW_APP_ID", "")  # flow containing the Voicebot applet
 
-# Sarvam API prices in INR (pay as you go, ex-GST) -- used for the live cost meter.
-PRICE_STT_PER_MIN = _float("PRICE_STT_PER_MIN", 0.49)
-PRICE_TTS_PER_1K_CHARS = _float("PRICE_TTS_PER_1K_CHARS", 1.00)
-PRICE_LLM_INPUT_PER_1M = _float("PRICE_LLM_INPUT_PER_1M", 15.0)
-PRICE_LLM_CACHED_PER_1M = _float("PRICE_LLM_CACHED_PER_1M", 5.0)
-PRICE_LLM_OUTPUT_PER_1M = _float("PRICE_LLM_OUTPUT_PER_1M", 60.0)
+# Voice AI prices in INR, ex-GST, used for each call's cost. Defaults are Sarvam's pay-as-you-go
+# rates as billed in Nov 2026 (dashboard: Bulbul v4 Flash at Rs 2 per 1k characters; the
+# 105B model at its introductory rate). Change them in .env if your plan's rates differ.
+PRICE_STT_PER_MIN = _float("PRICE_STT_PER_MIN", 0.49)  # billed per second of audio sent
+PRICE_TTS_PER_1K_CHARS = _float("PRICE_TTS_PER_1K_CHARS", 2.00)
+PRICE_LLM_INPUT_PER_1M = _float("PRICE_LLM_INPUT_PER_1M", 10.0)
+PRICE_LLM_CACHED_PER_1M = _float("PRICE_LLM_CACHED_PER_1M", 0.25)
+PRICE_LLM_OUTPUT_PER_1M = _float("PRICE_LLM_OUTPUT_PER_1M", 25.0)
+
+# Phone line prices in INR per minute, billed in whole pulses from when the call is
+# answered. Exotel and Twilio quote rates per account: copy yours from your invoice/plan.
+PRICE_EXOTEL_PER_MIN = _float("PRICE_EXOTEL_PER_MIN", 1.00)
+EXOTEL_PULSE_SECS = int(os.getenv("EXOTEL_PULSE_SECS", "60"))
+PRICE_TWILIO_PER_MIN = _float("PRICE_TWILIO_PER_MIN", 0.0)
+TWILIO_PULSE_SECS = int(os.getenv("TWILIO_PULSE_SECS", "60"))
+
+
+def telephony_rate(channel: str) -> tuple[float, int]:
+    """(INR per minute, pulse seconds) for a call channel; browser/chat calls have no line cost."""
+    if channel == "exotel":
+        return PRICE_EXOTEL_PER_MIN, EXOTEL_PULSE_SECS
+    if channel == "twilio":
+        return PRICE_TWILIO_PER_MIN, TWILIO_PULSE_SECS
+    return 0.0, 0
 
 
 def twilio_configured() -> bool:

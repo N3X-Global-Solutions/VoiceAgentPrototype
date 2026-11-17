@@ -105,16 +105,59 @@ export function SettingsPage({
         </div>
 
         <div className="card">
-          <Section icon="shield" title="Credit guards" description="Server-wide limits applied to every call, whatever an agent's own settings say.">
+          <Section
+            icon="coins"
+            title="Cost rates"
+            description="What each call's cost is calculated from (INR, before GST). Set these in the server's .env to match your invoices."
+          >
+            {health ? (
+              <div className="wide">
+                <dl className="kv rates">
+                  <RateRow label="Voice output" value={`₹${health.rates.tts_per_1k_chars} per 1,000 characters`} env="PRICE_TTS_PER_1K_CHARS" />
+                  <RateRow label="Speech recognition" value={`₹${health.rates.stt_per_min} per minute of caller speech`} env="PRICE_STT_PER_MIN" />
+                  <RateRow
+                    label="AI model"
+                    value={`₹${health.rates.llm_input_per_1m} in · ₹${health.rates.llm_cached_per_1m} cached · ₹${health.rates.llm_output_per_1m} out, per 1M tokens`}
+                    env="PRICE_LLM_INPUT_PER_1M, PRICE_LLM_CACHED_PER_1M, PRICE_LLM_OUTPUT_PER_1M"
+                  />
+                  <RateRow
+                    label="Phone line: Exotel"
+                    value={`₹${health.rates.exotel_per_min} per minute, billed per ${health.rates.exotel_pulse_secs}s`}
+                    env="PRICE_EXOTEL_PER_MIN, EXOTEL_PULSE_SECS"
+                  />
+                  <RateRow
+                    label="Phone line: Twilio"
+                    value={health.rates.twilio_per_min ? `₹${health.rates.twilio_per_min} per minute, billed per ${health.rates.twilio_pulse_secs}s` : 'Not set'}
+                    env="PRICE_TWILIO_PER_MIN, TWILIO_PULSE_SECS"
+                  />
+                </dl>
+              </div>
+            ) : (
+              <span className="muted">Loading…</span>
+            )}
+          </Section>
+          <Section icon="shield" title="Limits" description="Server-wide limits applied to every call, whatever an agent's own settings say.">
             <Field label="Maximum call length" hint="MAX_CALL_SECONDS_CAP">
               <input value={health ? `${health.max_call_seconds_cap} seconds` : '–'} readOnly />
             </Field>
-            <Field label="Maximum cost per call" hint="MAX_COST_PER_CALL_INR">
+            <Field label="Maximum voice AI cost per call" hint="MAX_COST_PER_CALL_INR · phone-line cost not included">
               <input value={health ? `₹${health.max_cost_per_call_inr}` : '–'} readOnly />
             </Field>
           </Section>
         </div>
       </div>
     </div>
+  )
+}
+
+function RateRow({ label, value, env }: { label: string; value: string; env: string }) {
+  return (
+    <>
+      <dt>
+        {label}
+        <span className="kv-detail mono">{env}</span>
+      </dt>
+      <dd>{value}</dd>
+    </>
   )
 }

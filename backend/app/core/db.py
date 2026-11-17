@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, inspect, text
 from sqlmodel import Field, Session, SQLModel, create_engine
 
 from app.core.config import DATABASE_URL
@@ -60,7 +60,9 @@ class CallSession(SQLModel, table=True):
     llm_prompt_tokens: int = 0
     llm_cached_tokens: int = 0
     llm_completion_tokens: int = 0
-    cost_inr: float = 0
+    cost_inr: float = 0  # total: voice AI + phone line
+    # Per-part cost in INR: {stt, tts, llm, telephony, telephony_billed_secs}. Empty for older calls.
+    cost_breakdown: dict = Field(default_factory=dict, sa_column=Column(JSON, nullable=True))
     transcript: list = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     latency_turns: list = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     error: str = ""
@@ -79,6 +81,21 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 def init_db() -> None:
     SQLModel.metadata.create_all(engine)
+    _add_missing_columns()
+
+
+def _add_missing_columns() -> None:
+    """create_all() never alters existing tables, so add columns introduced since (SQLite-safe)."""
+    inspector = inspect(engine)
+    with engine.begin() as conn:
+        for table in SQLModel.metadata.sorted_tables:
+            if not inspector.has_table(table.name):
+                continue
+            existing = {c["name"] for c in inspector.get_columns(table.name)}
+            for column in table.columns:
+                if column.name not in existing:
+                    kind = column.type.compile(engine.dialect)
+                    conn.execute(text(f'ALTER TABLE "{table.name}" ADD COLUMN "{column.name}" {kind}'))
 
 
 def get_session():

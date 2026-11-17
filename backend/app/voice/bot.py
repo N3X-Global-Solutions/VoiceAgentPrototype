@@ -243,7 +243,7 @@ async def run_agent_call(
             await worker.queue_frame(RTVIServerMessageFrame(data=payload))
 
     pause_ms = cfg.end_of_speech_ms or (FAST_DEFAULT_END_OF_SPEECH_MS if cfg.turn_detection == "fast" else None)
-    metrics = CallMetricsObserver(send=send_to_client, pause_ms=pause_ms)
+    metrics = CallMetricsObserver(send=send_to_client, pause_ms=pause_ms, channel=channel)
 
     stt, turn_params = _speech_input(cfg, in_sample_rate)
     tts = SarvamTTSService(
@@ -438,7 +438,8 @@ async def run_agent_call(
             elapsed = loop.time() - started
             if elapsed >= limit:
                 reason = f"max call length {limit}s reached"
-            elif metrics.cost_inr() >= config.MAX_COST_PER_CALL_INR:
+            # The cap protects voice AI credits; phone-line time is bounded by `limit` above.
+            elif metrics.ai_cost_inr() >= config.MAX_COST_PER_CALL_INR:
                 reason = f"cost cap Rs {config.MAX_COST_PER_CALL_INR} reached"
             else:
                 continue
@@ -489,6 +490,7 @@ def _save_call(call_id: str, metrics: CallMetricsObserver, error: str) -> None:
         call.llm_cached_tokens = usage["llm_cached_tokens"]
         call.llm_completion_tokens = usage["llm_completion_tokens"]
         call.cost_inr = usage["cost_inr"]
+        call.cost_breakdown = usage["cost_breakdown"]
         call.transcript = metrics.transcript
         call.latency_turns = metrics.turns
         db.add(call)

@@ -101,7 +101,7 @@ export function OverviewPage({
       sub: 'Calls completed without error',
       icon: 'check',
     },
-    { label: 'Usage cost', value: inr(stats.spend), sub: 'Estimated, all calls', icon: 'coins' },
+    { label: 'Total cost', value: inr(stats.spend), sub: 'Voice AI + phone lines, ex-GST', icon: 'coins' },
   ]
   const maxDay = Math.max(1, ...stats.days.map((d) => d.count))
   const recentAgents = clients

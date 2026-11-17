@@ -29,6 +29,19 @@ export function CallDetailsModal({
   const tone = latencyTone(c.latency_avg_ms, 1000, 1400)
   const channel = CHANNEL_LABEL[c.channel] ?? c.channel
   const isPhone = c.channel !== 'browser' && c.channel !== 'chat'
+  const b = c.cost_breakdown ?? {}
+  const hasBreakdown = b.tts != null
+  const billedMin = b.telephony_billed_secs ? b.telephony_billed_secs / 60 : 0
+  const costRows: [string, string, number][] = hasBreakdown
+    ? [
+        ['Voice output', `${c.tts_chars.toLocaleString()} characters`, b.tts ?? 0],
+        ['Speech recognition', `${c.stt_seconds.toLocaleString()} s of speech`, b.stt ?? 0],
+        ['AI model', `${(c.llm_prompt_tokens + c.llm_completion_tokens).toLocaleString()} tokens`, b.llm ?? 0],
+        ...(isPhone
+          ? ([[`Phone line (${channel})`, `${billedMin.toLocaleString()} min billed`, b.telephony ?? 0]] as [string, string, number][])
+          : []),
+      ]
+    : []
 
   const stats: [string, string, ReturnType<typeof latencyTone>?][] = [
     ['Duration', duration(c.duration_secs)],
@@ -142,6 +155,22 @@ export function CallDetailsModal({
             <LatencyBars turns={c.latency_turns} emptyText="No voice turns were measured for this call." />
           </section>
           <section>
+            <div className="detail-section-title">Cost</div>
+            {hasBreakdown ? (
+              <dl className="kv cost-kv">
+                {costRows.map(([label, detail, value]) => (
+                  <CostRow key={label} label={label} detail={detail} value={value} />
+                ))}
+                <dt className="total">Total</dt>
+                <dd className="total">{inr(c.cost_inr, 2)}</dd>
+              </dl>
+            ) : (
+              <p className="muted small">
+                {inr(c.cost_inr, 2)} estimated. A per-part breakdown is recorded for calls made after the pricing update.
+              </p>
+            )}
+          </section>
+          <section>
             <div className="detail-section-title">Usage</div>
             <dl className="kv">
               {usage.map(([k, v]) => (
@@ -164,6 +193,18 @@ export function CallDetailsModal({
         </aside>
       </div>
     </Modal>
+  )
+}
+
+function CostRow({ label, detail, value }: { label: string; detail: string; value: number }) {
+  return (
+    <>
+      <dt>
+        {label}
+        <span className="kv-detail">{detail}</span>
+      </dt>
+      <dd>{inr(value, 2)}</dd>
+    </>
   )
 }
 

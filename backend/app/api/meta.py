@@ -25,6 +25,18 @@ def health():
         "inbound_agent_id": get_setting("inbound_agent_id"),
         "max_call_seconds_cap": config.MAX_CALL_SECONDS_CAP,
         "max_cost_per_call_inr": config.MAX_COST_PER_CALL_INR,
+        # Rates the cost meter uses (INR, ex-GST); set in .env.
+        "rates": {
+            "stt_per_min": config.PRICE_STT_PER_MIN,
+            "tts_per_1k_chars": config.PRICE_TTS_PER_1K_CHARS,
+            "llm_input_per_1m": config.PRICE_LLM_INPUT_PER_1M,
+            "llm_cached_per_1m": config.PRICE_LLM_CACHED_PER_1M,
+            "llm_output_per_1m": config.PRICE_LLM_OUTPUT_PER_1M,
+            "exotel_per_min": config.PRICE_EXOTEL_PER_MIN,
+            "exotel_pulse_secs": config.EXOTEL_PULSE_SECS,
+            "twilio_per_min": config.PRICE_TWILIO_PER_MIN,
+            "twilio_pulse_secs": config.TWILIO_PULSE_SECS,
+        },
     }
 
 

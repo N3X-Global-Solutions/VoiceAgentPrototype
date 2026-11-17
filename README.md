@@ -56,12 +56,12 @@ Single-server alternative: `cd frontend && npm run build`. The backend then serv
 |---|---|---|
 | Hard max call length (all calls) | 300 s | `MAX_CALL_SECONDS_CAP` in `.env` |
 | Per-agent max call length | 180 s | agent form |
-| Cost cap per call | ₹5 | `MAX_COST_PER_CALL_INR` in `.env` |
+| Voice AI cost cap per call (phone line not included) | ₹10 | `MAX_COST_PER_CALL_INR` in `.env` |
 | Silence → "Are you still there?" → hang up | 12 s | agent form |
 | Bad key / no credits → call ends with an error (no silent retry loop) | — | `app/voice/bot.py` |
 
-The live cost meter in the Test lab uses Sarvam's pay-as-you-go prices: STT ₹0.49/min, TTS ₹1 per 1k chars, LLM ₹15/₹60 per 1M tokens. Text chat tests cost about ₹0.01–0.04 per turn.
-Typical voice cost is about ₹1.1/min. **After your first 2-minute call, check the balance on the Sarvam dashboard** to confirm.
+Every call's cost is calculated from the rates in `.env` (Settings → Cost rates shows the active values). Defaults are Sarvam's pay-as-you-go prices as billed in Nov 2026: voice ₹2 per 1,000 characters, speech recognition ₹0.49 per minute of caller speech, AI model ₹10 / ₹0.25 cached / ₹25 per 1M tokens. Phone calls add the line rate (`PRICE_EXOTEL_PER_MIN`, default ₹1/min in 60 s pulses; set yours from your Exotel invoice).
+Voice output is ~95% of the voice AI cost, so typical cost is about ₹2.8/min plus the phone line. Compare a day's total with the Sarvam dashboard's usage breakdown to confirm.
 
 ## 3. Full test (no telephony account needed)
 

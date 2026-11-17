@@ -71,7 +71,24 @@ export type Health = {
   inbound_agent_id: string
   max_call_seconds_cap: number
   max_cost_per_call_inr: number
+  rates: Rates
 }
+
+/** Rates the server's cost meter uses (INR, ex-GST). */
+export type Rates = {
+  stt_per_min: number
+  tts_per_1k_chars: number
+  llm_input_per_1m: number
+  llm_cached_per_1m: number
+  llm_output_per_1m: number
+  exotel_per_min: number
+  exotel_pulse_secs: number
+  twilio_per_min: number
+  twilio_pulse_secs: number
+}
+
+/** Per-part cost of a call in INR. Empty for calls made before the breakdown existed. */
+export type CostBreakdown = Partial<{ stt: number; tts: number; llm: number; telephony: number; telephony_billed_secs: number }>
 
 export type LatencyTurn = {
   turn: number
@@ -106,6 +123,7 @@ export type CallSession = {
   llm_cached_tokens: number
   llm_completion_tokens: number
   cost_inr: number
+  cost_breakdown: CostBreakdown | null
   transcript: { role: 'user' | 'agent' | 'event'; text: string }[]
   latency_turns: LatencyTurn[]
   error: string
