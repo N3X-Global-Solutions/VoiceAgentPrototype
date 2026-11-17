@@ -7,6 +7,7 @@ dependencies = [
     "fastapi>=0.162.0",
     "httpx>=0.28.1",
     "loguru>=0.7.3",
+    "num2words>=0.5.14",
     "pipecat-ai[runner,sarvam,silero,webrtc,websocket]>=1.15.0",
     "python-dotenv>=1.2.4",
     "sqlmodel>=0.0.48",

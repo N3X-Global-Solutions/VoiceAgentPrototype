@@ -37,7 +37,10 @@ from av import AudioFrame
 from fastapi import FastAPI
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from app import config  # noqa: E402  (loads .env)
+from app.core import config  # noqa: E402  (loads .env)
+
+# Session cookie from signing in as the admin (the API needs it); set in main().
+AUTH_COOKIES: dict[str, str] = {}
 
 CALLER_LINES = [
     "Hi, can you tell me what you can help me with?",
@@ -292,7 +295,7 @@ async def browser_call(base: str, agent_id: str, lines: list[bytes]) -> dict:
     await pc.setLocalDescription(await pc.createOffer())
     while pc.iceGatheringState != "complete":
         await asyncio.sleep(0.05)
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=30, cookies=AUTH_COOKIES) as client:
         resp = await client.post(
             f"{base}/api/agents/{agent_id}/offer",
             json={"sdp": pc.localDescription.sdp, "type": pc.localDescription.type},
@@ -428,9 +431,16 @@ async def main():
 
     async with httpx.AsyncClient(timeout=60) as client:
         try:
-            health = (await client.get(f"{args.base}/api/health")).json()
+            login = await client.post(
+                f"{args.base}/api/auth/login",
+                json={"email": config.ADMIN_EMAIL, "password": config.ADMIN_PASSWORD},
+            )
         except httpx.HTTPError:
             sys.exit(f"Backend not reachable at {args.base}. Start it: uv run uvicorn app.main:app --port 7860")
+        if login.status_code != 200:
+            sys.exit(f"Admin sign-in failed ({login.status_code}): check ADMIN_EMAIL / ADMIN_PASSWORD in .env")
+        AUTH_COOKIES.update(client.cookies)
+        health = (await client.get(f"{args.base}/api/health")).json()
         if not health["sarvam_key_set"] or not config.SARVAM_API_KEY:
             sys.exit("SARVAM_API_KEY is missing in .env (both the backend and this script read it).")
 

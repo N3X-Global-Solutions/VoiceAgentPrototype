@@ -4,9 +4,26 @@ Create clients. Each client gets its own voice agent, created in the same step: 
 Each call runs a [Pipecat](https://github.com/pipecat-ai/pipecat) pipeline: **Sarvam Saaras v4 realtime STT → `sarvam-105b-conversations` → Bulbul v4 Flash TTS**. You can test in the browser, by text chat, or with real phone calls (Twilio / Exotel). Latency and cost are measured on every turn.
 
 ```
-frontend/  React + Vite UI (clients, agent editor, test lab, call history)
-backend/   FastAPI + Pipecat (API, browser WebRTC calls, phone WebSocket, metrics, SQLite)
-SARVAM_VOICE_AGENTS_ANALYSIS.md   research, costs, architecture
+backend/                 FastAPI + Pipecat, managed with uv
+  app/main.py            app wiring: middleware, routers, serves the built UI
+  app/api/               HTTP/WebSocket routes, one module per area
+                         (auth, meta, clients, testing, live calls, call history)
+  app/core/              settings (.env), database models, session security
+  app/agents/            agent config model, voice catalog, HTTP tools
+  app/voice/             the call pipeline (STT → LLM → TTS), metrics, text shaping
+  app/telephony/         Twilio / Exotel dialing and call matching
+  scripts/e2e_test.py    end-to-end test that plays the caller
+frontend/                React + Vite + TypeScript (imports use the @/ alias for src/)
+  src/app/               auth gate, app shell (sidebar, top bar), hash routes
+  src/components/        shared UI: icons, badges, tabs, fields, theme toggle
+  src/features/          one folder per area: auth, overview, agents (+ config tabs),
+                         clients, calls, testing (voice / chat / phone playground), settings
+  src/lib/               API client, formatting, colour tones
+  src/styles/            tokens → base → components → layout → pages
+deploy/nginx-site.conf   Nginx site for voicepilot.n3xglobalsolutions.com (HTTPS via certbot)
+deploy/Caddyfile         optional bundled HTTPS proxy, for a server without Nginx
+Dockerfile, docker-compose.yml
+docs/                    deployment guides, research and costs, design references
 ```
 
 ## 1. Run it locally (browser calls)
@@ -27,7 +44,9 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173, then: **New client** → fill in the client + agent → **Create** → **Test lab → Start browser call** (allow the microphone).
+Open http://localhost:5173 and sign in with the admin account (`ADMIN_EMAIL` / `ADMIN_PASSWORD` in `.env`; the defaults are in `.env.example`). Then: **Create agent** (sidebar) → fill in the client + agent → **Create agent** → in the **Playground** panel, press the call button (allow the microphone).
+
+All `/api` routes need a signed-in session, except the telephony webhooks (`/telephony/*`, `/ws/telephony*`) and the demo tool (`/api/demo/order-status`).
 
 Single-server alternative: `cd frontend && npm run build`. The backend then serves the UI at http://localhost:7860.
 
@@ -39,7 +58,7 @@ Single-server alternative: `cd frontend && npm run build`. The backend then serv
 | Per-agent max call length | 180 s | agent form |
 | Cost cap per call | ₹5 | `MAX_COST_PER_CALL_INR` in `.env` |
 | Silence → "Are you still there?" → hang up | 12 s | agent form |
-| Bad key / no credits → call ends with an error (no silent retry loop) | — | `bot.py` |
+| Bad key / no credits → call ends with an error (no silent retry loop) | — | `app/voice/bot.py` |
 
 The live cost meter in the Test lab uses Sarvam's pay-as-you-go prices: STT ₹0.49/min, TTS ₹1 per 1k chars, LLM ₹15/₹60 per 1M tokens. Text chat tests cost about ₹0.01–0.04 per turn.
 Typical voice cost is about ₹1.1/min. **After your first 2-minute call, check the balance on the Sarvam dashboard** to confirm.
@@ -165,6 +184,10 @@ Each call's avg / p50 / p95 / max latency, transcript, token/char/second usage a
 
 Saving an agent bumps its version. Each call records which version it used.
 
-## 7. Deploying later (AWS)
+## 7. Deploying to a VPS (Hostinger, Docker)
 
-See Part C of `SARVAM_VOICE_AGENTS_ANALYSIS.md`. The API endpoints can move to Lambda. Live calls need a long-running container (ECS Fargate) because calls are persistent WebSocket/WebRTC streams.
+See **[docs/deploy-vps.md](docs/deploy-vps.md)**: frontend and backend ship in **one container** (`Dockerfile` + `docker-compose.yml`), behind the server's Nginx at https://voicepilot.n3xglobalsolutions.com. In short: add the Cloudflare DNS record, fill in `.env`, run `docker compose up -d --build`, then add the Nginx site and certificate.
+
+## 8. Deploying later (AWS)
+
+See Part C of [docs/research-and-costs.md](docs/research-and-costs.md) and [docs/deployment-and-scaling.md](docs/deployment-and-scaling.md). The API endpoints can move to Lambda. Live calls need a long-running container (ECS Fargate) because calls are persistent WebSocket/WebRTC streams.

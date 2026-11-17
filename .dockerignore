@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+!.env.example
+**/.DS_Store
+**/__pycache__
+*.pyc
+*.pdf
+*.md
+backend/.venv
+backend/data
+frontend/node_modules
+frontend/dist
+docker-compose.yml
+deploy

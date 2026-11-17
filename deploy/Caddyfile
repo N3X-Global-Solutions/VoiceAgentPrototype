@@ -1,0 +1,16 @@
+{$DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Microphone is needed for browser test calls (only on our own origin).
+		Permissions-Policy "microphone=(self), camera=(), geolocation=()"
+		-Server
+	}
+
+	# API, telephony webhooks, phone-call WebSockets and the UI are all served by the app.
+	reverse_proxy 127.0.0.1:7860
+}

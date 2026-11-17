@@ -1,0 +1,48 @@
+# Production stack for a single VPS (e.g. Hostinger KVM, Ubuntu 22.04/24.04).
+#
+#   app    FastAPI + Pipecat + the built UI in ONE container, on 127.0.0.1:7860 only.
+#          Put your existing Nginx in front of it (deploy/nginx-site.conf).
+#   caddy  OPTIONAL, only for a server with nothing on ports 80/443:
+#          docker compose --profile caddy up -d --build
+#
+# Both use the host network: browser voice calls are WebRTC, whose media flows over
+# random UDP ports that Docker's port mapping can't forward. See docs/deploy-vps.md.
+
+services:
+  app:
+    build: .
+    image: voice-agent-studio:latest
+    restart: unless-stopped
+    network_mode: host
+    env_file: .env
+    environment:
+      HOST: 127.0.0.1
+      PORT: "7860"
+      FORWARDED_ALLOW_IPS: 127.0.0.1
+    volumes:
+      - app-data:/app/data
+    logging:
+      driver: json-file
+      options: { max-size: "20m", max-file: "5" }
+
+  caddy:
+    image: caddy:2.8.4
+    profiles: ["caddy"]  # not started unless you pass --profile caddy
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      DOMAIN: ${DOMAIN:-}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  app-data:
+  caddy-data:
+  caddy-config:
