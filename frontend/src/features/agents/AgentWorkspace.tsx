@@ -6,6 +6,7 @@ import { AgentCallLogs } from '@/features/calls/AgentCallLogs'
 import { TestPanel } from '@/features/testing/TestPanel'
 import { api, type Agent, type AgentConfig, type Catalog, type Client, type Health } from '@/lib/api'
 import { timeAgo } from '@/lib/format'
+import { providerName } from '@/lib/providers'
 import { AgentConfigForm } from './config/AgentConfigForm'
 import { CONFIG_TABS } from './config/tabs'
 
@@ -35,7 +36,12 @@ export function AgentWorkspace({
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null)
   const [historyKey, setHistoryKey] = useState(0)
   const dirty = name !== agent.name || JSON.stringify(config) !== JSON.stringify(agent.config)
-  const voice = catalog.voices.find((v) => v.id === agent.config.voice)
+  const voice = catalog.voices.find((v) => v.provider === agent.config.tts_provider && v.id === agent.config.voice)
+  const p = agent.config
+  const stack =
+    p.stt_provider === p.llm_provider && p.llm_provider === p.tts_provider
+      ? providerName(catalog, p.stt_provider)
+      : [p.stt_provider, p.llm_provider, p.tts_provider].map((id) => providerName(catalog, id)).join(' → ')
   const isInbound = health?.inbound_agent_id === agent.id
 
   useEffect(() => {
@@ -92,6 +98,7 @@ export function AgentWorkspace({
           <input className="title-input" value={name} onChange={(e) => setName(e.target.value)} aria-label="Agent name" />
           <div className="meta">
             <Badge icon="hash">v{agent.version}</Badge>
+            <Badge icon="server" title="Speech recognition → AI model → Voice">{stack}</Badge>
             <Badge icon="globe">{catalog.languages[agent.config.language]}</Badge>
             <Badge icon="headphones">{voice ? `${voice.name} · ${voice.style}` : agent.config.voice}</Badge>
             <Badge icon="zap">{agent.config.turn_detection === 'fast' ? 'Fast turn-taking' : 'Robust turn-taking'}</Badge>
@@ -112,12 +119,19 @@ export function AgentWorkspace({
             <AgentCallLogs agent={{ agentId: agent.id, agentName: agent.name, clientId: client.id, clientName: client.name }} refreshKey={historyKey} />
           ) : (
             <div className="card">
-              <AgentConfigForm catalog={catalog} value={config} onChange={setConfig} tab={tab} />
+              <AgentConfigForm catalog={catalog} health={health} value={config} onChange={setConfig} tab={tab} />
             </div>
           )}
         </div>
         {/* Always mounted, so switching tabs never drops a live call. */}
-        <TestPanel agent={agent} health={health} dirty={dirty} onCallEnded={() => setHistoryKey((k) => k + 1)} />
+        <TestPanel
+          agent={agent}
+          catalog={catalog}
+          health={health}
+          dirty={dirty}
+          onCallEnded={() => setHistoryKey((k) => k + 1)}
+          onChangeProviders={() => navigate({ page: 'agent', clientId: client.id, agentId: agent.id, tab: 'providers' }, { replace: true })}
+        />
       </div>
 
       {(dirty || message) && (

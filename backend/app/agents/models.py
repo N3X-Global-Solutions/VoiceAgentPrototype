@@ -1,45 +1,11 @@
 """The agent definition we own. One row per client agent; no Sarvam-side agent exists."""
 
-import json
-from functools import cache
-from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-LANGUAGES: dict[str, str] = {
-    "en-IN": "English",
-    "hi-IN": "Hindi",
-    "ta-IN": "Tamil",
-    "te-IN": "Telugu",
-    "kn-IN": "Kannada",
-    "mr-IN": "Marathi",
-    "gu-IN": "Gujarati",
-    "bn-IN": "Bengali",
-    "pa-IN": "Punjabi",
-    "ml-IN": "Malayalam",  # no Bulbul v4 Flash voices yet: uses Aparna (English) cross-language
-}
-
-
-# How each language is written, so replies come out in the script TTS expects.
-SCRIPTS: dict[str, str] = {
-    "en-IN": "English",
-    "hi-IN": "Devanagari script",
-    "ta-IN": "Tamil script",
-    "te-IN": "Telugu script",
-    "kn-IN": "Kannada script",
-    "mr-IN": "Devanagari script",
-    "gu-IN": "Gujarati script",
-    "bn-IN": "Bengali script",
-    "pa-IN": "Gurmukhi script",
-    "ml-IN": "Malayalam script",
-}
-
-
-@cache
-def voices() -> list[dict]:
-    """Bulbul v4 Flash personas, parsed from Sarvam's voice catalog."""
-    return json.loads((Path(__file__).parent / "voices.json").read_text())
+from app.providers import catalog
+from app.providers.catalog import LANGUAGES, SCRIPTS  # noqa: F401  (re-exported)
 
 
 class HttpTool(BaseModel):
@@ -61,9 +27,13 @@ class AgentConfig(BaseModel):
     instructions: str = (
         "You are a friendly, helpful voice assistant. Keep replies short and conversational."
     )
+    # One provider per part of the pipeline (see app/providers/catalog.py).
+    stt_provider: Literal["sarvam", "navana", "gnani"] = "sarvam"
+    llm_provider: Literal["sarvam", "gnani"] = "sarvam"
+    tts_provider: Literal["sarvam", "navana", "gnani"] = "sarvam"
     language: str = "en-IN"
     auto_detect_language: bool = False
-    voice: str = "simran_enhi_customer"
+    voice: str = "simran_enhi_customer"  # an id from the TTS provider's voice list
     pace: float = Field(default=1.0, ge=0.5, le=2.0)
     temperature: float = Field(default=0.3, ge=0.0, le=1.0)
     max_call_seconds: int = Field(default=180, ge=30, le=1800)
@@ -76,6 +46,7 @@ class AgentConfig(BaseModel):
     # Turn detection: "sarvam" = Sarvam's server-side VAD decides when the caller stopped
     # (Sarvam's recommendation for noisy lines); "fast" = local Silero VAD decides after a
     # short pause and tells Sarvam to finalize at once (measured ~0.9-1.1 s quicker to answer).
+    # Other speech recognition providers always use "fast".
     turn_detection: Literal["sarvam", "fast"] = "fast"
     # Silence that ends the caller's turn. None = Sarvam's default (sarvam mode) / 300 ms (fast).
     end_of_speech_ms: int | None = Field(default=None, ge=150, le=2000)
@@ -95,12 +66,19 @@ class AgentConfig(BaseModel):
             raise ValueError(f"Unsupported language {v!r}")
         return v
 
-    @field_validator("voice")
-    @classmethod
-    def _known_voice(cls, v: str) -> str:
-        if v not in {voice["id"] for voice in voices()}:
-            raise ValueError(f"Unknown Bulbul v4 Flash voice {v!r}")
-        return v
+    @model_validator(mode="after")
+    def _fits_providers(self) -> "AgentConfig":
+        """The language must work with both speech providers, and the voice must be the TTS provider's."""
+        if self.language not in catalog.call_languages(self.stt_provider, self.tts_provider):
+            stt = catalog.providers()[self.stt_provider]["name"]
+            tts = catalog.providers()[self.tts_provider]["name"]
+            raise ValueError(f"{LANGUAGES[self.language]} isn't supported by {stt} speech recognition with {tts} voices")
+        voice = catalog.find_voice(self.tts_provider, self.voice)
+        if voice is None:
+            raise ValueError(f"Unknown voice {self.voice!r} for {catalog.providers()[self.tts_provider]['name']}")
+        if not catalog.voice_fits(voice, self.language):
+            raise ValueError(f"The voice {voice['name']} doesn't speak {LANGUAGES[self.language]}")
+        return self
 
     @field_validator("tools")
     @classmethod

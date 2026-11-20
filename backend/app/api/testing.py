@@ -12,10 +12,10 @@ from sqlmodel import Session
 from app.agents.models import LANGUAGES, SCRIPTS, AgentConfig
 from app.agents.tools import openai_tools, run_http_tool
 from app.api.deps import agent_or_404
-from app.core import config
 from app.core.db import get_session
-from app.core.errors import NO_PROVIDER_KEY, public_error
-from app.voice.bot import LLM_MODEL
+from app.core.errors import NO_LLM_KEY, public_error
+from app.providers import catalog
+from app.providers.factory import chat_request
 
 router = APIRouter(tags=["testing"])
 
@@ -32,10 +32,12 @@ class TranslateIn(BaseModel):
 @router.post("/api/agents/{agent_id}/chat")
 async def chat(agent_id: str, body: ChatIn, db: Session = Depends(get_session)):
     """Test the agent in text: same prompt and tools as a call, no audio (~Rs 0.01-0.05 per turn)."""
-    if not config.SARVAM_API_KEY:
-        raise HTTPException(400, NO_PROVIDER_KEY)
     agent = agent_or_404(db, agent_id)
     cfg = AgentConfig.model_validate(agent.config)
+    provider = cfg.llm_provider
+    if not catalog.configured(provider):
+        raise HTTPException(400, f"This agent's AI model needs {catalog.providers()[provider]['key_env']} in the server's .env.")
+    prices = catalog.part(provider, "llm")["prices"]
     history = [m for m in body.messages[-20:] if m.get("role") in ("user", "assistant")]
     messages: list[dict] = [
         {"role": "system", "content": cfg.system_prompt()},
@@ -52,10 +54,10 @@ async def chat(agent_id: str, body: ChatIn, db: Session = Depends(get_session)):
 
     async with httpx.AsyncClient(timeout=30) as client:
         for _ in range(4):  # at most 3 tool rounds, then a final answer
-            data = await _sarvam_chat(client, messages, cfg.temperature, tools)
+            data = await _chat(client, provider, messages, cfg.temperature, tools)
             usage = data.get("usage") or {}
-            cost += (usage.get("prompt_tokens", 0) / 1e6 * config.PRICE_LLM_INPUT_PER_1M
-                     + usage.get("completion_tokens", 0) / 1e6 * config.PRICE_LLM_OUTPUT_PER_1M)
+            cost += (usage.get("prompt_tokens", 0) / 1e6 * prices["input"].rate
+                     + usage.get("completion_tokens", 0) / 1e6 * prices["output"].rate)
             message = data["choices"][0]["message"]
             calls = message.get("tool_calls") or []
             if not calls:
@@ -90,25 +92,18 @@ async def chat(agent_id: str, body: ChatIn, db: Session = Depends(get_session)):
     }
 
 
-async def _sarvam_chat(client: httpx.AsyncClient, messages: list[dict], temperature: float, tools: list[dict]) -> dict:
+async def _chat(client: httpx.AsyncClient, provider: str, messages: list[dict], temperature: float, tools: list[dict]) -> dict:
+    url, headers, extra = chat_request(provider)
     payload = {
-        "model": LLM_MODEL,
         "messages": messages,
         "temperature": temperature,
         "max_tokens": 300,
-        "reasoning_effort": None,
+        **extra,
     }
     if tools:
         payload["tools"] = tools
     for attempt in range(2):  # one retry for transient overload / rate limit
-        resp = await client.post(
-            "https://api.sarvam.ai/v2/chat/completions",
-            headers={
-                "api-subscription-key": config.SARVAM_API_KEY,
-                "Authorization": f"Bearer {config.SARVAM_API_KEY}",
-            },
-            json=payload,
-        )
+        resp = await client.post(url, headers=headers, json=payload)
         if resp.status_code in (429, 503) and attempt == 0:
             await asyncio.sleep(1.0)
             continue
@@ -125,8 +120,9 @@ async def translate(body: TranslateIn):
     """Translate an agent's fixed phrases (greeting, goodbye...) into its language (~Rs 0.01)."""
     if body.language not in LANGUAGES:
         raise HTTPException(422, f"Unsupported language {body.language}")
-    if not config.SARVAM_API_KEY:
-        raise HTTPException(400, NO_PROVIDER_KEY)
+    provider = catalog.default_llm_provider()
+    if provider is None:
+        raise HTTPException(400, NO_LLM_KEY)
     texts = {k: v for k, v in body.texts.items() if v.strip()}
     if not texts or body.language == "en-IN":
         return {"texts": body.texts}
@@ -144,7 +140,7 @@ async def translate(body: TranslateIn):
         {"role": "user", "content": json.dumps(texts, ensure_ascii=False)},
     ]
     async with httpx.AsyncClient(timeout=30) as client:
-        data = await _sarvam_chat(client, messages, temperature=0.2, tools=[])
+        data = await _chat(client, provider, messages, temperature=0.2, tools=[])
     content = (data["choices"][0]["message"].get("content") or "").strip()
     content = content.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     try:

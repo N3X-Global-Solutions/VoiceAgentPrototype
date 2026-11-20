@@ -38,6 +38,7 @@ from fastapi import FastAPI
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.core import config  # noqa: E402  (loads .env)
+from app.providers import catalog  # noqa: E402
 
 # Session cookie from signing in as the admin (the API needs it); set in main().
 AUTH_COOKIES: dict[str, str] = {}
@@ -503,7 +504,7 @@ async def main():
                 print(f"  Sarvam TTS failed ({e.response.status_code}): {e.response.text[:300]}")
                 checks.append(("caller speech generated", False))
                 args.skip_browser = args.skip_phone = True
-            total_cost += sum(len(t) for t in CALLER_LINES) / 1000 * config.PRICE_TTS_PER_1K_CHARS
+            total_cost += sum(len(t) for t in CALLER_LINES) / 1000 * catalog.part("sarvam", "tts")["prices"]["chars"].rate
 
         if args.compare and lines:
             variants = [("sarvam", None), ("sarvam", 400), ("fast", 300)]

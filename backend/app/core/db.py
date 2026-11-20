@@ -63,6 +63,8 @@ class CallSession(SQLModel, table=True):
     cost_inr: float = 0  # total: voice AI + phone line
     # Per-part cost in INR: {stt, tts, llm, telephony, telephony_billed_secs}. Empty for older calls.
     cost_breakdown: dict = Field(default_factory=dict, sa_column=Column(JSON, nullable=True))
+    # Provider per part: {stt, llm, tts}. Empty for calls made before provider choice existed (all Sarvam).
+    providers: dict = Field(default_factory=dict, sa_column=Column(JSON, nullable=True))
     transcript: list = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     latency_turns: list = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     error: str = ""

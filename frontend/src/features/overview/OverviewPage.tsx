@@ -174,7 +174,13 @@ export function OverviewPage({
             <li>
               <Dot tone={health?.provider_key_set ? 'green' : 'red'} />
               <span className="label">Voice AI engine</span>
-              <Badge tone={health?.provider_key_set ? 'green' : 'red'}>{health?.provider_key_set ? 'Connected' : 'Not configured'}</Badge>
+              <Badge tone={health?.provider_key_set ? 'green' : 'red'}>
+                {health?.providers
+                  ? `${Object.values(health.providers).filter(Boolean).length} of ${Object.keys(health.providers).length} providers connected`
+                  : health?.provider_key_set
+                    ? 'Connected'
+                    : 'Not configured'}
+              </Badge>
             </li>
             <li>
               <Dot tone={telephony ? 'green' : 'gray'} />

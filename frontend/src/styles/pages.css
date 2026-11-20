@@ -1240,10 +1240,17 @@
   }
 }
 
+@media (max-width: 1080px) {
+  .choice-cards.providers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
   .section-body,
   .tool-body,
-  .choice-cards {
+  .choice-cards,
+  .choice-cards.providers {
     grid-template-columns: minmax(0, 1fr);
   }
 

@@ -3,18 +3,21 @@ import { Icon } from '@/components/Icon'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Avatar, Badge, CopyField, Dot, Field, IconChip, PageHead, Section } from '@/components/ui'
 import { agentIndex } from '@/features/calls/useCalls'
-import type { Client, Health } from '@/lib/api'
+import type { Catalog, Client, Health, PartKind, Price } from '@/lib/api'
+import { PART_LABEL_LOWER, SOURCE_LABEL, priceText } from '@/lib/providers'
 
 /** Account, appearance, integrations status, webhook URLs and credit guards. */
 export function SettingsPage({
   email,
   health,
+  catalog,
   clients,
   navigate,
   onSignOut,
 }: {
   email: string
   health: Health | null
+  catalog: Catalog
   clients: Client[]
   navigate: Navigate
   onSignOut: () => void
@@ -25,7 +28,11 @@ export function SettingsPage({
   const inbound = health?.inbound_agent_id ? agentIndex(clients).get(health.inbound_agent_id) : undefined
 
   const checks: [boolean | undefined, string, string][] = [
-    [health?.provider_key_set, 'Voice AI engine', health?.provider_key_set ? 'API key configured' : "Not configured: add the provider API key to the server's .env"],
+    ...catalog.providers.map((p): [boolean | undefined, string, string] => {
+      const ok = health?.providers?.[p.id] ?? p.configured
+      const parts = (['stt', 'llm', 'tts'] as PartKind[]).filter((k) => p[k]).map((k) => PART_LABEL_LOWER[k])
+      return [ok, `Voice AI: ${p.name}`, ok ? `API key configured · ${parts.join(', ')}` : `Not configured: set ${p.key_env} in .env`]
+    }),
     [health?.public_base_url?.startsWith('https://'), 'Public URL', health?.public_base_url || 'Set PUBLIC_BASE_URL (needed for phone calls)'],
     [health?.twilio_configured, 'Twilio', health?.twilio_configured ? 'Account and number configured' : 'Not configured'],
     [health?.exotel_configured, 'Exotel', health?.exotel_configured ? 'Account, ExoPhone and flow configured' : 'Not configured'],
@@ -108,18 +115,34 @@ export function SettingsPage({
           <Section
             icon="coins"
             title="Cost rates"
-            description="What each call's cost is calculated from (INR, before GST). Set these in the server's .env to match your invoices."
+            description="Each call is billed at the rates of the providers its agent uses (INR, before GST). Set these in the server's .env to match your invoices."
           >
             {health ? (
               <div className="wide">
                 <dl className="kv rates">
-                  <RateRow label="Voice output" value={`₹${health.rates.tts_per_1k_chars} per 1,000 characters`} env="PRICE_TTS_PER_1K_CHARS" />
-                  <RateRow label="Speech recognition" value={`₹${health.rates.stt_per_min} per minute of caller speech`} env="PRICE_STT_PER_MIN" />
-                  <RateRow
-                    label="AI model"
-                    value={`₹${health.rates.llm_input_per_1m} in · ₹${health.rates.llm_cached_per_1m} cached · ₹${health.rates.llm_output_per_1m} out, per 1M tokens`}
-                    env="PRICE_LLM_INPUT_PER_1M, PRICE_LLM_CACHED_PER_1M, PRICE_LLM_OUTPUT_PER_1M"
-                  />
+                  {catalog.providers.flatMap((p) =>
+                    (['stt', 'llm', 'tts'] as PartKind[]).flatMap((kind) => {
+                      const part = p[kind]
+                      if (!part) return []
+                      const entries = Object.entries(part.prices)
+                      const pr = part.prices
+                      const value = pr.input
+                        ? `₹${pr.input.rate} in · ₹${pr.cached.rate} cached · ₹${pr.output.rate} out / 1M tokens`
+                        : entries.map(([, x]) => priceText(x)).join(' · ')
+                      const flagged = entries.find(([, x]) => x.source !== 'published')?.[1]
+                      const note = entries.map(([, pr]) => pr.note).filter(Boolean)[0]
+                      return [
+                        <RateRow
+                          key={`${p.id}-${kind}`}
+                          label={`${p.name}: ${PART_LABEL_LOWER[kind]}`}
+                          value={value}
+                          env={entries.map(([, pr]) => pr.env).join(', ')}
+                          flag={flagged?.source}
+                          note={note || (kind === 'stt' ? (part.billing === 'connected' ? 'billed for the whole call' : 'billed per second of speech') : undefined)}
+                        />,
+                      ]
+                    }),
+                  )}
                   <RateRow
                     label="Phone line: Exotel"
                     value={`₹${health.rates.exotel_per_min} per minute, billed per ${health.rates.exotel_pulse_secs}s`}
@@ -150,14 +173,26 @@ export function SettingsPage({
   )
 }
 
-function RateRow({ label, value, env }: { label: string; value: string; env: string }) {
+function RateRow({ label, value, env, flag, note }: { label: string; value: string; env: string; flag?: Price['source']; note?: string }) {
   return (
     <>
       <dt>
         {label}
         <span className="kv-detail mono">{env}</span>
       </dt>
-      <dd>{value}</dd>
+      <dd>
+        {value}
+        {(note || flag) && (
+          <span className="kv-detail">
+            {flag && (
+              <span className={`price-flag ${flag}`} title={SOURCE_LABEL[flag]}>
+                {flag}
+              </span>
+            )}{' '}
+            {note}
+          </span>
+        )}
+      </dd>
     </>
   )
 }

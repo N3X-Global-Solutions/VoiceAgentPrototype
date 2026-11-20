@@ -4,6 +4,7 @@ import { Avatar, Badge, CopyField, Dot } from '@/components/ui'
 import type { CallSession } from '@/lib/api'
 import { publicText } from '@/lib/colors'
 import { duration, formatDate, inr, latencyTone, ms, parseDate } from '@/lib/format'
+import { PROVIDER_NAME } from '@/lib/providers'
 import { LatencyBars } from './LatencyBars'
 import { CHANNEL_LABEL, STATUS_TONE, type AgentRef } from './useCalls'
 
@@ -32,11 +33,14 @@ export function CallDetailsModal({
   const b = c.cost_breakdown ?? {}
   const hasBreakdown = b.tts != null
   const billedMin = b.telephony_billed_secs ? b.telephony_billed_secs / 60 : 0
+  // Calls from before provider choice ran entirely on Sarvam.
+  const via = (kind: 'stt' | 'llm' | 'tts') => PROVIDER_NAME[c.providers?.[kind] ?? 'sarvam'] ?? c.providers?.[kind]
+  const sttUnit = b.rates?.stt_billing === 'connected' ? 's connected' : 's of speech'
   const costRows: [string, string, number][] = hasBreakdown
     ? [
-        ['Voice output', `${c.tts_chars.toLocaleString()} characters`, b.tts ?? 0],
-        ['Speech recognition', `${c.stt_seconds.toLocaleString()} s of speech`, b.stt ?? 0],
-        ['AI model', `${(c.llm_prompt_tokens + c.llm_completion_tokens).toLocaleString()} tokens`, b.llm ?? 0],
+        [`Voice · ${via('tts')}`, `${c.tts_chars.toLocaleString()} characters`, b.tts ?? 0],
+        [`Speech recognition · ${via('stt')}`, `${c.stt_seconds.toLocaleString()} ${sttUnit}`, b.stt ?? 0],
+        [`AI model · ${via('llm')}`, `${(c.llm_prompt_tokens + c.llm_completion_tokens).toLocaleString()} tokens`, b.llm ?? 0],
         ...(isPhone
           ? ([[`Phone line (${channel})`, `${billedMin.toLocaleString()} min billed`, b.telephony ?? 0]] as [string, string, number][])
           : []),
@@ -52,7 +56,7 @@ export function CallDetailsModal({
   ]
 
   const usage: [string, string][] = [
-    ['Speech recognised', `${c.stt_seconds.toLocaleString()} s`],
+    ['Speech recognition billed', `${c.stt_seconds.toLocaleString()} s`],
     ['Voice characters', c.tts_chars.toLocaleString()],
     ['AI tokens in', c.llm_prompt_tokens.toLocaleString()],
     ...(c.llm_cached_tokens ? ([['  of which cached', c.llm_cached_tokens.toLocaleString()]] as [string, string][]) : []),
@@ -66,6 +70,7 @@ export function CallDetailsModal({
     ['Started', formatDate(c.started_at, true)],
     ...(c.ended_at ? ([['Ended', formatDate(c.ended_at, true)]] as [string, string][]) : []),
     ['Agent version', `v${c.agent_version}`],
+    ['Providers', `${via('stt')} → ${via('llm')} → ${via('tts')}`],
   ]
 
   return (

@@ -37,6 +37,7 @@ from pipecat.metrics.metrics import (
 from pipecat.observers.base_observer import BaseObserver, FramePushed
 
 from app.core import config
+from app.providers.catalog import CallPricing, call_pricing
 
 ServerMessageSender = Callable[[dict], Awaitable[None]]
 
@@ -50,9 +51,17 @@ def _service_kind(processor: str) -> str | None:
 
 
 class CallMetricsObserver(BaseObserver):
-    def __init__(self, send: ServerMessageSender | None = None, pause_ms: int | None = None, channel: str = "browser"):
+    def __init__(
+        self,
+        send: ServerMessageSender | None = None,
+        pause_ms: int | None = None,
+        channel: str = "browser",
+        pricing: CallPricing | None = None,
+    ):
         super().__init__(observe_every_push=False)
         self._send = send
+        # Rates of the providers this call uses.
+        self.pricing = pricing or call_pricing("sarvam", "sarvam", "sarvam")
         # Phone channels (exotel/twilio) add a per-minute line cost; browser calls don't.
         self.channel = channel
         self.ended_at: float | None = None
@@ -86,22 +95,37 @@ class CallMetricsObserver(BaseObserver):
         start = self._connected_at if self._connected_at is not None else self.started_at
         return max((self.ended_at or time.time()) - start, 0.0)
 
+    def stt_billed_seconds(self) -> float:
+        """Speech recognition seconds the provider bills: speech sent, or the whole connected call."""
+        if self.pricing.stt_billing == "connected":
+            return self.line_seconds()
+        return self.stt_seconds
+
     def cost_breakdown(self) -> dict:
         """Cost in INR per part: speech recognition, voice, AI model and phone line."""
+        p = self.pricing
         uncached = max(self.llm_prompt_tokens - self.llm_cached_tokens, 0)
         rate, pulse = config.telephony_rate(self.channel)
         billed_secs = math.ceil(self.line_seconds() / pulse) * pulse if rate and pulse else 0
         return {
-            "stt": round(self.stt_seconds / 60 * config.PRICE_STT_PER_MIN, 4),
-            "tts": round(self.tts_chars / 1000 * config.PRICE_TTS_PER_1K_CHARS, 4),
+            "stt": round(self.stt_billed_seconds() / 60 * p.stt_per_min, 4),
+            "tts": round(self.tts_chars / 1000 * p.tts_per_1k_chars, 4),
             "llm": round(
-                uncached / 1e6 * config.PRICE_LLM_INPUT_PER_1M
-                + self.llm_cached_tokens / 1e6 * config.PRICE_LLM_CACHED_PER_1M
-                + self.llm_completion_tokens / 1e6 * config.PRICE_LLM_OUTPUT_PER_1M,
+                uncached / 1e6 * p.llm_input_per_1m
+                + self.llm_cached_tokens / 1e6 * p.llm_cached_per_1m
+                + self.llm_completion_tokens / 1e6 * p.llm_output_per_1m,
                 4,
             ),
             "telephony": round(billed_secs / 60 * rate, 4),
             "telephony_billed_secs": billed_secs,
+            # The rates used, so old calls keep their cost explanation if prices change later.
+            "rates": {
+                "stt_per_min": p.stt_per_min,
+                "stt_billing": p.stt_billing,
+                "tts_per_1k_chars": p.tts_per_1k_chars,
+                "llm_input_per_1m": p.llm_input_per_1m,
+                "llm_output_per_1m": p.llm_output_per_1m,
+            },
         }
 
     def ai_cost_inr(self) -> float:
@@ -115,7 +139,7 @@ class CallMetricsObserver(BaseObserver):
 
     def usage(self) -> dict:
         return {
-            "stt_seconds": round(self.stt_seconds, 2),
+            "stt_seconds": round(self.stt_billed_seconds(), 2),
             "tts_chars": self.tts_chars,
             "llm_prompt_tokens": self.llm_prompt_tokens,
             "llm_cached_tokens": self.llm_cached_tokens,

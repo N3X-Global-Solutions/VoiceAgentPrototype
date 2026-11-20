@@ -19,11 +19,18 @@ from pipecat.transports.smallwebrtc.transport import SmallWebRTCTransport
 from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams
 
 from app.api.deps import agent_or_404
-from app.core import config
 from app.core.db import Agent, CallSession, engine, get_session, get_setting
-from app.core.errors import NO_PROVIDER_KEY
 from app.telephony import providers as telephony
+from app.agents.models import AgentConfig
+from app.providers.factory import missing_keys_message
 from app.voice.bot import run_agent_call
+
+
+def _require_provider_keys(agent: Agent) -> None:
+    """Refuse a call up front if the agent's providers have no API key, instead of a silent call."""
+    message = missing_keys_message(AgentConfig.model_validate(agent.config))
+    if message:
+        raise HTTPException(400, message)
 
 router = APIRouter(tags=["live calls"])
 webrtc_handler = SmallWebRTCRequestHandler()
@@ -39,10 +46,9 @@ class PhoneCallIn(BaseModel):
 
 @router.post("/api/agents/{agent_id}/offer")
 async def webrtc_offer(agent_id: str, request: SmallWebRTCRequest, background_tasks: BackgroundTasks):
-    if not config.SARVAM_API_KEY:
-        raise HTTPException(400, NO_PROVIDER_KEY)
     with Session(engine) as db:
         agent = agent_or_404(db, agent_id)
+    _require_provider_keys(agent)
 
     async def on_connection(connection: SmallWebRTCConnection):
         transport = SmallWebRTCTransport(
@@ -78,6 +84,7 @@ async def webrtc_ice(agent_id: str, request: SmallWebRTCPatchRequest):
 @router.post("/api/agents/{agent_id}/phone-call")
 async def phone_call(agent_id: str, body: PhoneCallIn, db: Session = Depends(get_session)):
     agent = agent_or_404(db, agent_id)
+    _require_provider_keys(agent)
     call = CallSession(
         agent_id=agent.id,
         agent_version=agent.version,

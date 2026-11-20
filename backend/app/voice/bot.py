@@ -1,8 +1,8 @@
 """The voice agent runtime: one Pipecat pipeline per call, built from an agent's config.
 
-Sarvam realtime STT (saaras:v4) -> sarvam-105b-conversations -> Bulbul v4 Flash TTS,
-tuned per Sarvam's Pipecat production guide: Sarvam's server-side VAD drives turns
-(no Silero), External turn strategies, small TTS buffer, reasoning off.
+STT -> LLM -> TTS, each from the provider the agent picked (Sarvam, Navana or Gnani;
+see app/providers/). Sarvam speech recognition can let its server-side VAD drive turns
+("robust"); every other setup uses local Silero VAD ("fast").
 """
 
 import asyncio
@@ -32,19 +32,13 @@ from pipecat.processors.aggregators.llm_response_universal import (
 )
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 from pipecat.processors.frameworks.rtvi.frames import RTVIServerMessageFrame
-from pipecat.services.llm_service import FunctionCallParams
-from pipecat.services.sarvam.llm import SarvamLLMService
-from pipecat.services.sarvam.stt import SarvamRealtimeSTTService
-from pipecat.services.sarvam.tts import SarvamTTSService
+from pipecat.services.llm_service import FunctionCallParams, LLMService
+from pipecat.services.stt_service import STTService
+from pipecat.services.tts_service import TTSService
 from pipecat.transports.base_transport import BaseTransport
-from pipecat.audio.vad.silero import SileroVADAnalyzer
-from pipecat.audio.vad.vad_analyzer import VADParams
-from pipecat.turns.user_start import ExternalUserTurnStartStrategy, VADUserTurnStartStrategy
-from pipecat.turns.user_stop import ExternalUserTurnStopStrategy, SpeechTimeoutUserTurnStopStrategy
 from pipecat.turns.user_mute.mute_until_first_bot_complete_user_mute_strategy import (
     MuteUntilFirstBotCompleteUserMuteStrategy,
 )
-from pipecat.turns.user_turn_strategies import UserTurnStrategies
 from pipecat.workers.runner import WorkerRunner
 
 from app.core import config
@@ -52,14 +46,8 @@ from app.agents.models import AgentConfig, HttpTool
 from app.voice.call_metrics import CallMetricsObserver
 from app.core.db import Agent, CallSession, engine
 from app.core.errors import public_error
-from app.voice.stt_preroll import PrerollSarvamRealtimeSTTService
 from app.agents.tools import END_CALL_DESCRIPTION, run_http_tool
-from app.voice.tts_text import tts_text_transform
-
-LLM_MODEL = "sarvam-105b-conversations"
-TTS_MODEL = "bulbul:v4-flash"
-STT_MODEL = "saaras:v4"
-
+from app.providers import catalog, factory
 
 def _tool_schema(tool: HttpTool) -> FunctionSchema:
     return FunctionSchema(
@@ -76,8 +64,6 @@ def _http_tool_handler(tool: HttpTool):
 
     return handler
 
-
-FAST_DEFAULT_END_OF_SPEECH_MS = 300
 
 # Words that show the caller is closing the call: English, romanised and native-script Indic.
 # Matched anywhere in the caller's last message.
@@ -160,53 +146,6 @@ class CallerSpeechGate(FrameProcessor):
         await self.push_frame(frame, direction)
 
 
-def _speech_input(cfg: AgentConfig, sample_rate: int) -> tuple[SarvamRealtimeSTTService, dict]:
-    """STT service plus the user-turn settings that match the agent's turn detection mode."""
-    settings = SarvamRealtimeSTTService.Settings(
-        model=STT_MODEL,
-        language=None if cfg.auto_detect_language else cfg.language,
-        mode="transcribe",
-        stream_type="fast",
-    )
-    keyterms = cfg.important_words or None
-
-    if cfg.turn_detection == "fast":
-        # Local Silero VAD ends the turn after a short pause; the STT then flushes its
-        # buffered audio and sends speech_end, so Sarvam finalizes without waiting for
-        # its own server-side silence window. The pre-roll STT keeps the first words
-        # that are spoken before VAD confirms speech.
-        stop_secs = (cfg.end_of_speech_ms or FAST_DEFAULT_END_OF_SPEECH_MS) / 1000
-        stt = PrerollSarvamRealtimeSTTService(
-            api_key=config.SARVAM_API_KEY,
-            sample_rate=sample_rate,
-            keyterms=keyterms,
-            ttfs_p99_latency=0.4,  # measured: realtime finals arrive ~150-260 ms after speech_end
-            settings=settings,
-        )
-        return stt, {
-            "vad_analyzer": SileroVADAnalyzer(params=VADParams(stop_secs=stop_secs)),
-            "user_turn_strategies": UserTurnStrategies(
-                start=[VADUserTurnStartStrategy()],
-                stop=[SpeechTimeoutUserTurnStopStrategy(user_speech_timeout=0.05)],
-            ),
-        }
-
-    if cfg.end_of_speech_ms:
-        settings.silence_duration_ms = cfg.end_of_speech_ms
-    stt = SarvamRealtimeSTTService(
-        api_key=config.SARVAM_API_KEY,
-        sample_rate=sample_rate,
-        keyterms=keyterms,
-        settings=settings,
-    )
-    return stt, {
-        "user_turn_strategies": UserTurnStrategies(
-            start=[ExternalUserTurnStartStrategy(enable_interruptions=True)],
-            stop=[ExternalUserTurnStopStrategy(timeout=0.1, wait_for_transcript=True)],
-        ),
-    }
-
-
 async def run_agent_call(
     *,
     transport: BaseTransport,
@@ -230,6 +169,7 @@ async def run_agent_call(
         call.direction = direction
         call.phone_number = phone_number or call.phone_number
         call.provider_call_id = provider_call_id or call.provider_call_id
+        call.providers = {"stt": cfg.stt_provider, "llm": cfg.llm_provider, "tts": cfg.tts_provider}
         call.status = "active"
         db.add(call)
         db.commit()
@@ -242,32 +182,12 @@ async def run_agent_call(
         if browser and worker is not None:
             await worker.queue_frame(RTVIServerMessageFrame(data=payload))
 
-    pause_ms = cfg.end_of_speech_ms or (FAST_DEFAULT_END_OF_SPEECH_MS if cfg.turn_detection == "fast" else None)
-    metrics = CallMetricsObserver(send=send_to_client, pause_ms=pause_ms, channel=channel)
+    pricing = catalog.call_pricing(cfg.stt_provider, cfg.tts_provider, cfg.llm_provider)
+    metrics = CallMetricsObserver(send=send_to_client, pause_ms=factory.pause_ms(cfg), channel=channel, pricing=pricing)
 
-    stt, turn_params = _speech_input(cfg, in_sample_rate)
-    tts = SarvamTTSService(
-        api_key=config.SARVAM_API_KEY,
-        sample_rate=out_sample_rate,
-        settings=SarvamTTSService.Settings(
-            model=TTS_MODEL,
-            voice=cfg.voice,
-            language=cfg.language,
-            pace=cfg.pace,
-            min_buffer_size=30,  # Sarvam's API minimum (its Pipecat guide's 15-25 is now rejected)
-        ),
-        # Digits the LLM still writes become spoken words ("14000" -> "fourteen thousand").
-        text_transforms=[("*", tts_text_transform)],
-    )
-    llm = SarvamLLMService(
-        api_key=config.SARVAM_API_KEY,
-        settings=SarvamLLMService.Settings(
-            model=LLM_MODEL,
-            temperature=cfg.temperature,
-            reasoning_effort=None,  # thinking off: lower latency, no hidden token cost
-            max_tokens=300,
-        ),
-    )
+    stt, turn_params = factory.make_stt(cfg, in_sample_rate)
+    tts = factory.make_tts(cfg, out_sample_rate)
+    llm = factory.make_llm(cfg)
 
     functions: list[FunctionSchema] = []
     end_refused_at = -1
@@ -362,9 +282,7 @@ async def run_agent_call(
         nonlocal call_error, ending
         text = str(getattr(frame, "error", frame))
         lowered = text.lower()
-        speech_service = isinstance(
-            getattr(frame, "processor", None), (SarvamTTSService, SarvamRealtimeSTTService)
-        )
+        speech_service = isinstance(getattr(frame, "processor", None), (TTSService, STTService))
         unrecoverable = (
             getattr(frame, "fatal", False)
             or any(k in lowered for k in ("invalid_subscription_key", "insufficient", "quota", "402", "401", "403"))
@@ -376,7 +294,7 @@ async def run_agent_call(
             return
         if not unrecoverable:
             # e.g. a transient LLM 503: say so instead of leaving the caller in silence.
-            if isinstance(getattr(frame, "processor", None), SarvamLLMService):
+            if isinstance(getattr(frame, "processor", None), LLMService):
                 logger.warning(f"[{call_id}] LLM error, asking caller to repeat: {text[:200]}")
                 await worker.queue_frames([TTSSpeakFrame(cfg.repeat_message)])
             return
@@ -463,11 +381,11 @@ async def run_agent_call(
         if greet_task:
             greet_task.cancel()
         metrics.finish()
-        _save_call(call_id, metrics, call_error)
+        _save_call(call_id, metrics, call_error, cfg)
     return call_id
 
 
-def _save_call(call_id: str, metrics: CallMetricsObserver, error: str) -> None:
+def _save_call(call_id: str, metrics: CallMetricsObserver, error: str, cfg: AgentConfig) -> None:
     summary = metrics.latency_summary()
     usage = metrics.usage()
     with Session(engine) as db:
@@ -491,6 +409,7 @@ def _save_call(call_id: str, metrics: CallMetricsObserver, error: str) -> None:
         call.llm_completion_tokens = usage["llm_completion_tokens"]
         call.cost_inr = usage["cost_inr"]
         call.cost_breakdown = usage["cost_breakdown"]
+        call.providers = {"stt": cfg.stt_provider, "llm": cfg.llm_provider, "tts": cfg.tts_provider}
         call.transcript = metrics.transcript
         call.latency_turns = metrics.turns
         db.add(call)

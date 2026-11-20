@@ -1,7 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '@/components/Icon'
-import { Field, IconChip, Section, Spinner, Toggle } from '@/components/ui'
-import { api, type AgentConfig, type Catalog, type HttpTool } from '@/lib/api'
+import { Badge, Field, IconChip, Section, Spinner, Toggle } from '@/components/ui'
+import { api, type AgentConfig, type Catalog, type Health, type HttpTool, type PartKind, type ProviderId } from '@/lib/api'
+import {
+  CROSS_LANGUAGE_VOICES,
+  PART_KEY,
+  SOURCE_LABEL,
+  callLanguages,
+  defaultVoice,
+  hasFeature,
+  partPriceSource,
+  partPriceText,
+  providerName,
+  providersFor,
+  switchProvider,
+  voiceFits,
+  voicesFor,
+} from '@/lib/providers'
 import type { ConfigTab } from './tabs'
 import { ToolEditor } from './ToolEditor'
 
@@ -14,17 +29,11 @@ function looksEnglish(text: string) {
   return /[A-Za-z]/.test(text) && !/[ऀ-෿]/.test(text)
 }
 
-// Voices offered in every language, not just their own, so we can hear how they handle
-// other languages. A voice outside its own language isn't guaranteed to sound right; listen before using it.
-const CROSS_LANGUAGE_VOICES = ['aparna_en_edtech']
-
-function voiceFits(v: Catalog['voices'][number], language: string) {
-  return (
-    v.language === language ||
-    (v.group === 'Hindi-English Code-Mixed' && ['en-IN', 'hi-IN'].includes(language)) ||
-    CROSS_LANGUAGE_VOICES.includes(v.id)
-  )
-}
+const PART_INFO: { kind: PartKind; icon: 'mic' | 'brain' | 'headphones'; title: string; description: string }[] = [
+  { kind: 'stt', icon: 'mic', title: 'Speech recognition', description: "Turns the caller's speech into text." },
+  { kind: 'llm', icon: 'brain', title: 'AI model', description: 'Writes the agent\'s replies and calls its tools.' },
+  { kind: 'tts', icon: 'headphones', title: 'Voice', description: 'Speaks the replies. Its languages and voices fill the Voice tab.' },
+]
 
 const EMPTY_TOOL: HttpTool = {
   name: '',
@@ -39,19 +48,21 @@ const EMPTY_TOOL: HttpTool = {
 
 type Props = {
   catalog: Catalog
+  health?: Health | null
   value: AgentConfig
   onChange: (config: AgentConfig) => void
   tab: ConfigTab
 }
 
 /** The agent's configuration, one sub-tab at a time. */
-export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
+export function AgentConfigForm({ catalog, health, value, onChange, tab }: Props) {
   const set = <K extends keyof AgentConfig>(key: K, v: AgentConfig[K]) => onChange({ ...value, [key]: v })
   const latest = useRef(value)
   useEffect(() => {
     latest.current = value
   }, [value])
   const [translating, setTranslating] = useState<{ busy: boolean; text: string } | null>(null)
+  const [providerNote, setProviderNote] = useState<string | null>(null)
 
   const translatePhrases = async (language: string) => {
     const name = catalog.languages[language]
@@ -67,20 +78,17 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
   }
   const englishPhrases = value.language !== 'en-IN' && PHRASES.some((k) => looksEnglish(value[k]))
 
-  // The language's own voices first, then the cross-language ones.
-  const voices = catalog.voices
-    .filter((v) => voiceFits(v, value.language))
-    .sort(
-      (a, b) =>
-        Number(a.language !== value.language && CROSS_LANGUAGE_VOICES.includes(a.id)) -
-        Number(b.language !== value.language && CROSS_LANGUAGE_VOICES.includes(b.id)),
-    )
+  // The voice provider's voices for this language: its own first, then the cross-language ones.
+  const voices = voicesFor(catalog, value.tts_provider, value.language)
+  const languages = callLanguages(catalog, value.stt_provider, value.tts_provider)
+  const sttName = providerName(catalog, value.stt_provider)
+  const ttsName = providerName(catalog, value.tts_provider)
+  const voiceGroups = [...new Set(voices.map((v) => v.group))]
 
   const changeLanguage = (language: string) => {
-    const stillValid = catalog.voices.some((v) => v.id === value.voice && voiceFits(v, language))
-    // A language with no voices of its own (Malayalam) falls back to a cross-language voice.
-    const firstVoice =
-      catalog.voices.find((v) => v.language === language)?.id ?? catalog.voices.find((v) => voiceFits(v, language))?.id ?? value.voice
+    const stillValid = catalog.voices.some((v) => v.provider === value.tts_provider && v.id === value.voice && voiceFits(v, language))
+    // A language with no voices of its own (Sarvam Malayalam) falls back to a cross-language voice.
+    const firstVoice = defaultVoice(catalog, value.tts_provider, language) ?? value.voice
     const next = { ...value, language, voice: stillValid ? value.voice : firstVoice }
     onChange(next)
     latest.current = next
@@ -138,15 +146,79 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
     )
   }
 
+  if (tab === 'providers') {
+    const choose = (kind: PartKind, id: ProviderId) => {
+      if (value[PART_KEY[kind]] === id) return
+      const res = switchProvider(catalog, value, kind, id)
+      onChange(res.config)
+      latest.current = res.config
+      setProviderNote(res.note ?? null)
+    }
+    return (
+      <>
+        {providerNote && (
+          <div className="banner tone-amber" style={{ margin: '0 0 4px' }}>
+            <Icon name="alert" /> <span className="grow">{providerNote}</span>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setProviderNote(null)} aria-label="Dismiss">
+              <Icon name="x" size={14} />
+            </button>
+          </div>
+        )}
+        {PART_INFO.map(({ kind, icon, title, description }) => (
+          <Section key={kind} icon={icon} title={title} description={description} single>
+            <div className="choice-cards providers">
+              {providersFor(catalog, kind).map((p) => {
+                const part = p[kind]!
+                const active = value[PART_KEY[kind]] === p.id
+                const source = partPriceSource(part)
+                const keyMissing = health?.providers ? !health.providers[p.id] : !p.configured
+                return (
+                  <button key={p.id} type="button" className={`choice${active ? ' active' : ''}`} onClick={() => choose(kind, p.id)}>
+                    <div className="choice-body">
+                      <strong>{p.name}</strong>
+                      <span className="desc">{kind === 'tts' ? `${catalog.voices.filter((v) => v.provider === p.id).length} voices · ` : ''}{part.languages.length ? `${part.languages.length} languages` : part.model}</span>
+                      <span className="choice-price" title={source ? SOURCE_LABEL[source] : undefined}>
+                        {partPriceText(part)}
+                        {source && source !== 'published' && <span className={`price-flag ${source}`}>{source === 'estimate' ? 'estimate' : 'quoted'}</span>}
+                      </span>
+                      {part.note && <span className="desc">{part.note}</span>}
+                      {keyMissing && (
+                        <Badge tone="amber" icon="lock">
+                          {p.key_env} not set
+                        </Badge>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </Section>
+        ))}
+        <p className="muted small provider-footnote">
+          Each call is billed at the rates of the providers chosen here (INR, before GST), and the call log shows the cost of each part. Rates marked{' '}
+          <span className="price-flag estimate">estimate</span> aren't published: set the real ones in the server's .env (Settings → Cost rates).
+        </p>
+      </>
+    )
+  }
+
   if (tab === 'voice') {
     return (
       <>
-        <Section icon="globe" title="Language" description="The agent understands and replies in this language.">
+        <Section
+          icon="globe"
+          title="Language"
+          description={
+            value.stt_provider === value.tts_provider
+              ? `The agent understands and replies in this language. Showing the ${languages.length} languages ${sttName} supports.`
+              : `The agent understands and replies in this language. Showing the ${languages.length} languages both ${sttName} (speech recognition) and ${ttsName} (voice) support.`
+          }
+        >
           <Field label="Primary language">
             <select value={value.language} onChange={(e) => changeLanguage(e.target.value)}>
-              {Object.entries(catalog.languages).map(([code, name]) => (
+              {languages.map((code) => (
                 <option key={code} value={code}>
-                  {name} ({code})
+                  {catalog.languages[code]} ({code})
                 </option>
               ))}
             </select>
@@ -161,15 +233,21 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
           </div>
           {translateAlert}
         </Section>
-        <Section icon="headphones" title="Voice" description="The voice the agent speaks with.">
-          <Field label="Speaker" hint={`${voices.length} voices available for ${languageName}`}>
+        <Section icon="headphones" title="Voice" description={`The voice the agent speaks with, from ${ttsName}. Change the provider in the Providers tab.`}>
+          <Field label="Speaker" hint={`${voices.length} ${ttsName} voices available for ${languageName}`}>
             <select value={value.voice} onChange={(e) => set('voice', e.target.value)}>
-              {voices.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name} · {v.style}
-                  {v.group === 'Hindi-English Code-Mixed' ? ' (Hinglish)' : ''}
-                  {v.language !== value.language && CROSS_LANGUAGE_VOICES.includes(v.id) ? ' (English voice, test)' : ''}
-                </option>
+              {voiceGroups.map((group) => (
+                <optgroup key={group} label={group}>
+                  {voices
+                    .filter((v) => v.group === group)
+                    .map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.name} · {v.style}
+                        {v.group === 'Hindi-English Code-Mixed' ? ' (Hinglish)' : ''}
+                        {v.provider === 'sarvam' && v.language !== value.language && CROSS_LANGUAGE_VOICES.includes(v.id) ? ' (English voice, test)' : ''}
+                      </option>
+                    ))}
+                </optgroup>
               ))}
             </select>
           </Field>
@@ -179,7 +257,7 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
                 Speaking pace <span className="value">{value.pace.toFixed(2)}×</span>
               </>
             }
-            hint="1.00× is natural speed."
+            hint={value.tts_provider === 'gnani' ? '1.00× is natural speed. Gnani rounds to the speeds its voice model supports.' : '1.00× is natural speed.'}
           >
             <input type="range" min={0.5} max={2} step={0.05} value={value.pace} onChange={(e) => set('pace', Number(e.target.value))} />
           </Field>
@@ -189,11 +267,12 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
   }
 
   if (tab === 'speech') {
+    const robustAvailable = hasFeature(catalog, value.stt_provider, 'robust_turns')
     return (
       <>
         <Section icon="zap" title="Turn detection" description="How the agent decides the caller has finished speaking." single>
           <div className="choice-cards">
-            <button type="button" className={`choice${value.turn_detection === 'fast' ? ' active' : ''}`} onClick={() => set('turn_detection', 'fast')}>
+            <button type="button" className={`choice${value.turn_detection === 'fast' || !robustAvailable ? ' active' : ''}`} onClick={() => set('turn_detection', 'fast')}>
               <IconChip icon="zap" />
               <div>
                 <strong>Fast</strong>
@@ -202,21 +281,26 @@ export function AgentConfigForm({ catalog, value, onChange, tab }: Props) {
             </button>
             <button
               type="button"
-              className={`choice${value.turn_detection === 'sarvam' ? ' active' : ''}`}
+              className={`choice${value.turn_detection === 'sarvam' && robustAvailable ? ' active' : ''}`}
               onClick={() => set('turn_detection', 'sarvam')}
+              disabled={!robustAvailable}
             >
               <IconChip icon="wave" />
               <div>
                 <strong>Robust</strong>
-                <span className="desc">The speech engine detects the pause. Best on noisy lines, about 2.3 s.</span>
+                <span className="desc">
+                  {robustAvailable
+                    ? 'The speech engine detects the pause. Best on noisy lines, about 2.3 s.'
+                    : `Needs Sarvam speech recognition. ${sttName} always uses Fast.`}
+                </span>
               </div>
             </button>
           </div>
         </Section>
-        <Section icon="mic" title="Recognition" description="Fine-tune how the caller's speech is recognised.">
+        <Section icon="mic" title="Recognition" description={`Fine-tune how ${sttName} recognises the caller's speech.`}>
           <Field label="End-of-turn pause" hint="Shorter is faster, but may cut off callers who pause mid-sentence.">
             <select value={value.end_of_speech_ms ?? ''} onChange={(e) => set('end_of_speech_ms', e.target.value ? Number(e.target.value) : null)}>
-              <option value="">{value.turn_detection === 'fast' ? 'Default (300 ms)' : 'Default (engine decides)'}</option>
+              <option value="">{value.turn_detection === 'fast' || !robustAvailable ? 'Default (300 ms)' : 'Default (engine decides)'}</option>
               {[200, 250, 300, 400, 500, 700, 1000].map((v) => (
                 <option key={v} value={v}>
                   {v} ms
