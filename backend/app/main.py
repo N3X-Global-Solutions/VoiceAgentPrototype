@@ -21,8 +21,13 @@ FRONTEND_DIST = config.BACKEND_DIR.parent / "frontend" / "dist"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    if not config.SARVAM_API_KEY:
-        logger.warning("SARVAM_API_KEY is not set: calls will fail until you add it to .env")
+    from app.providers import catalog
+
+    ready = [info["name"] for p, info in catalog.providers().items() if catalog.configured(p)]
+    if ready:
+        logger.info(f"Voice AI providers with keys: {', '.join(ready)}")
+    else:
+        logger.warning("No voice AI provider key is set (SARVAM_API_KEY / NAVANA_API_KEY / GNANI_API_KEY): calls will fail")
     yield
     await live.webrtc_handler.close()
 

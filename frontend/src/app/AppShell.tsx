@@ -140,7 +140,7 @@ export function AppShell({ email, onSignOut }: { email: string; onSignOut: () =>
   } else if (view.page === 'calls') {
     content = <CallLogsPage clients={list} onOpenAgent={(r) => navigate({ page: 'agent', clientId: r.clientId, agentId: r.agentId, tab: 'logs' })} />
   } else if (view.page === 'settings') {
-    content = <SettingsPage email={email} health={health} clients={list} navigate={navigate} onSignOut={onSignOut} />
+    content = <SettingsPage email={email} health={health} catalog={catalog} clients={list} navigate={navigate} onSignOut={onSignOut} />
   } else if (view.page === 'new') {
     content = (
       <NewAgentPage

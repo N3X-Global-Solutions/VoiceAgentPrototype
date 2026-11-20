@@ -14,7 +14,25 @@ def _float(name: str, default: float) -> float:
     return float(os.getenv(name, default))
 
 
+def env_float(name: str, default: float) -> float:
+    return _float(name, default)
+
+
+# Voice AI providers. Each agent picks one per part (speech recognition, AI model, voice);
+# a provider is usable once its key is set. See app/providers/catalog.py.
 SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "")
+# Navana (Bodhi) keys from platform.navana.ai (bd_...). A legacy bodhi.navana.ai account also
+# needs NAVANA_CUSTOMER_ID and NAVANA_STT_URL=wss://bodhi.navana.ai.
+NAVANA_API_KEY = os.getenv("NAVANA_API_KEY", "")
+NAVANA_CUSTOMER_ID = os.getenv("NAVANA_CUSTOMER_ID", "")
+NAVANA_STT_URL = os.getenv("NAVANA_STT_URL", "wss://stt.navana.ai")
+NAVANA_TTS_URL = os.getenv("NAVANA_TTS_URL", "https://tts.navana.ai/tts/bytes")
+# Gnani (Vachana) key from app.gnani.ai. Its AI model (Evon) needs early access.
+GNANI_API_KEY = os.getenv("GNANI_API_KEY", "")
+
+
+def provider_api_key(provider: str) -> str:
+    return {"sarvam": SARVAM_API_KEY, "navana": NAVANA_API_KEY, "gnani": GNANI_API_KEY}.get(provider, "")
 
 # Public https base URL of this backend (ngrok / AWS). Needed only for phone calls,
 # because the telephony provider must reach our WebSocket from the internet.
@@ -54,14 +72,8 @@ EXOTEL_SUBDOMAIN = os.getenv("EXOTEL_SUBDOMAIN", "api.exotel.com")  # api.in.exo
 EXOTEL_CALLER_ID = os.getenv("EXOTEL_CALLER_ID", "")  # your ExoPhone
 EXOTEL_FLOW_APP_ID = os.getenv("EXOTEL_FLOW_APP_ID", "")  # flow containing the Voicebot applet
 
-# Voice AI prices in INR, ex-GST, used for each call's cost. Defaults are Sarvam's pay-as-you-go
-# rates as billed in Nov 2026 (dashboard: Bulbul v4 Flash at Rs 2 per 1k characters; the
-# 105B model at its introductory rate). Change them in .env if your plan's rates differ.
-PRICE_STT_PER_MIN = _float("PRICE_STT_PER_MIN", 0.49)  # billed per second of audio sent
-PRICE_TTS_PER_1K_CHARS = _float("PRICE_TTS_PER_1K_CHARS", 2.00)
-PRICE_LLM_INPUT_PER_1M = _float("PRICE_LLM_INPUT_PER_1M", 10.0)
-PRICE_LLM_CACHED_PER_1M = _float("PRICE_LLM_CACHED_PER_1M", 0.25)
-PRICE_LLM_OUTPUT_PER_1M = _float("PRICE_LLM_OUTPUT_PER_1M", 25.0)
+# Voice AI prices (INR, ex-GST) are per provider: see app/providers/catalog.py for every
+# PRICE_* variable and its default.
 
 # Phone line prices in INR per minute, billed in whole pulses from when the call is
 # answered. Exotel and Twilio quote rates per account: copy yours from your invoice/plan.

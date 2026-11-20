@@ -40,7 +40,7 @@ const STATE_LABEL: Record<string, string> = {
 }
 
 /** Talk to the agent from the browser over WebRTC, with live transcript, latency and cost. */
-export function BrowserCall({ agent, health, onEnded }: { agent: Agent; health: Health | null; onEnded: () => void }) {
+export function BrowserCall({ agent, health, ready, onEnded }: { agent: Agent; health: Health | null; ready: boolean; onEnded: () => void }) {
   const clientRef = useRef<PipecatClient | null>(null)
   const probeRef = useRef<PerceivedLatencyProbe | null>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -160,11 +160,6 @@ export function BrowserCall({ agent, health, onEnded }: { agent: Agent; health: 
 
   return (
     <>
-      {health && !health.provider_key_set && (
-        <div className="banner tone-red">
-          <Icon name="alert" /> The voice AI engine isn't configured on the server yet.
-        </div>
-      )}
       <div className={`call-stage${connected ? ' live' : ''}`}>
         <div className="orb-wrap">
           {connected && (
@@ -174,7 +169,7 @@ export function BrowserCall({ agent, health, onEnded }: { agent: Agent; health: 
             </>
           )}
           {!busy ? (
-            <button className="call-btn" onClick={start} disabled={!health?.provider_key_set} title="Start call" aria-label="Start call">
+            <button className="call-btn" onClick={start} disabled={!ready} title="Start call" aria-label="Start call">
               <Icon name="phone" size={20} />
             </button>
           ) : (

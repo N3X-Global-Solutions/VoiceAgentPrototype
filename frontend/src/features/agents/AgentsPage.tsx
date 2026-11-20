@@ -16,7 +16,7 @@ export function AgentsPage({ clients, catalog, health, navigate }: { clients: Cl
       (!language || agent.config.language === language) &&
       (!q || agent.name.toLowerCase().includes(q) || client.name.toLowerCase().includes(q) || client.industry.toLowerCase().includes(q)),
   )
-  const voice = (id: string) => catalog?.voices.find((v) => v.id === id)
+  const voice = (provider: string, id: string) => catalog?.voices.find((v) => v.provider === provider && v.id === id)
   const languagesInUse = [...new Set(rows.map((r) => r.agent.config.language))]
 
   return (
@@ -77,7 +77,7 @@ export function AgentsPage({ clients, catalog, health, navigate }: { clients: Cl
           ) : (
             <div className="agent-grid">
               {shown.map(({ client, agent }) => {
-                const v = voice(agent.config.voice)
+                const v = voice(agent.config.tts_provider, agent.config.voice)
                 return (
                   <button
                     key={agent.id}

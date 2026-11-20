@@ -1,13 +1,35 @@
 import { useState } from 'react'
 import { Icon } from '@/components/Icon'
-import type { Agent, Health } from '@/lib/api'
+import type { Agent, Catalog, Health } from '@/lib/api'
+import { PART_LABEL, missingKeys, providerName } from '@/lib/providers'
 import { BrowserCall } from './BrowserCall'
 import { ChatTest } from './ChatTest'
 import { PhoneTest } from './PhoneTest'
 
 /** The playground docked next to the agent config: voice, chat and phone tests. */
-export function TestPanel({ agent, health, dirty, onCallEnded }: { agent: Agent; health: Health | null; dirty?: boolean; onCallEnded: () => void }) {
+export function TestPanel({
+  agent,
+  catalog,
+  health,
+  dirty,
+  onCallEnded,
+  onChangeProviders,
+}: {
+  agent: Agent
+  catalog: Catalog
+  health: Health | null
+  dirty?: boolean
+  onCallEnded: () => void
+  onChangeProviders: () => void
+}) {
   const [tab, setTab] = useState<'browser' | 'chat' | 'phone'>('browser')
+  // Calls use the saved config, so readiness follows the saved providers, not unsaved edits.
+  const missing = missingKeys(catalog, health, agent.config)
+  const parts = [
+    ['stt', agent.config.stt_provider],
+    ['llm', agent.config.llm_provider],
+    ['tts', agent.config.tts_provider],
+  ] as const
 
   return (
     <aside className="card test-panel">
@@ -31,9 +53,27 @@ export function TestPanel({ agent, health, dirty, onCallEnded }: { agent: Agent;
         </div>
       </div>
       <div className="panel-body">
-        {tab === 'browser' && <BrowserCall agent={agent} health={health} onEnded={onCallEnded} />}
+        <div className="stack-strip" aria-label="Providers this test uses">
+          {parts.map(([kind, id]) => (
+            <span key={kind} className="stack-part" title={PART_LABEL[kind]}>
+              {kind === 'stt' ? 'STT' : kind === 'llm' ? 'AI' : 'Voice'} <b>{providerName(catalog, id)}</b>
+            </span>
+          ))}
+          <button type="button" className="btn btn-ghost btn-sm" onClick={onChangeProviders} title="Choose providers">
+            <Icon name="sliders" size={13} /> Change
+          </button>
+        </div>
+        {missing.length > 0 && (
+          <div className="banner tone-red">
+            <Icon name="alert" />
+            <span className="grow">
+              Add {missing.join(' and ')} to the server's .env to test with these providers.
+            </span>
+          </div>
+        )}
+        {tab === 'browser' && <BrowserCall agent={agent} health={health} ready={missing.length === 0} onEnded={onCallEnded} />}
         {tab === 'chat' && <ChatTest agent={agent} />}
-        {tab === 'phone' && <PhoneTest agent={agent} health={health} onPlaced={onCallEnded} />}
+        {tab === 'phone' && <PhoneTest agent={agent} health={health} ready={missing.length === 0} onPlaced={onCallEnded} />}
       </div>
     </aside>
   )

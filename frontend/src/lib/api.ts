@@ -12,7 +12,13 @@ export type HttpTool = {
   timeout_secs: number
 }
 
+export type ProviderId = 'sarvam' | 'navana' | 'gnani'
+export type PartKind = 'stt' | 'llm' | 'tts'
+
 export type AgentConfig = {
+  stt_provider: ProviderId
+  llm_provider: 'sarvam' | 'gnani'
+  tts_provider: ProviderId
   greeting: string
   instructions: string
   language: string
@@ -55,16 +61,41 @@ export type Client = {
 
 export type ClientFields = Omit<Client, 'id' | 'created_at' | 'agents'>
 
-export type Voice = { id: string; name: string; style: string; language: string; group: string }
+/** language "*" = the voice speaks every language its provider supports. */
+export type Voice = { id: string; name: string; style: string; language: string; group: string; provider: ProviderId }
+
+/** A rate the cost meter uses. source: published by the provider, quoted by you, or an estimate to confirm. */
+export type Price = { rate: number; unit: 'min' | '1k_chars' | '1m_tokens'; source: 'published' | 'quoted' | 'estimate'; env: string; note: string }
+
+export type ProviderPart = {
+  model: string
+  languages: string[]
+  features: string[] // robust_turns | auto_language | keywords
+  note: string
+  billing: string // stt: "speech" (speech sent) | "connected" (whole call)
+  prices: Record<string, Price> // stt: audio · tts: chars · llm: input, cached, output
+}
+
+export type Provider = {
+  id: ProviderId
+  name: string
+  configured: boolean
+  key_env: string
+  stt: ProviderPart | null
+  tts: ProviderPart | null
+  llm: ProviderPart | null
+}
 
 export type Catalog = {
   languages: Record<string, string>
   voices: Voice[]
+  providers: Provider[]
   defaults: AgentConfig
 }
 
 export type Health = {
-  provider_key_set: boolean
+  provider_key_set: boolean // at least one voice AI provider has a key
+  providers: Record<ProviderId, boolean>
   public_base_url: string
   twilio_configured: boolean
   exotel_configured: boolean
@@ -74,13 +105,8 @@ export type Health = {
   rates: Rates
 }
 
-/** Rates the server's cost meter uses (INR, ex-GST). */
+/** Phone-line rates (INR, ex-GST). Voice AI rates are per provider, in the catalog. */
 export type Rates = {
-  stt_per_min: number
-  tts_per_1k_chars: number
-  llm_input_per_1m: number
-  llm_cached_per_1m: number
-  llm_output_per_1m: number
   exotel_per_min: number
   exotel_pulse_secs: number
   twilio_per_min: number
@@ -88,7 +114,14 @@ export type Rates = {
 }
 
 /** Per-part cost of a call in INR. Empty for calls made before the breakdown existed. */
-export type CostBreakdown = Partial<{ stt: number; tts: number; llm: number; telephony: number; telephony_billed_secs: number }>
+export type CostBreakdown = Partial<{
+  stt: number
+  tts: number
+  llm: number
+  telephony: number
+  telephony_billed_secs: number
+  rates: { stt_per_min: number; stt_billing: string; tts_per_1k_chars: number; llm_input_per_1m: number; llm_output_per_1m: number }
+}>
 
 export type LatencyTurn = {
   turn: number
@@ -124,6 +157,7 @@ export type CallSession = {
   llm_completion_tokens: number
   cost_inr: number
   cost_breakdown: CostBreakdown | null
+  providers: Partial<Record<PartKind, ProviderId>> | null // empty for calls before provider choice (all Sarvam)
   transcript: { role: 'user' | 'agent' | 'event'; text: string }[]
   latency_turns: LatencyTurn[]
   error: string
@@ -153,7 +187,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     let message = `${res.status} ${res.statusText}`
     try {
       const body = await res.json()
-      message = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail ?? body)
+      if (typeof body.detail === 'string') message = body.detail
+      // FastAPI validation errors: [{msg: "Value error, …"}] -> readable sentences.
+      else if (Array.isArray(body.detail)) message = body.detail.map((d: { msg?: string }) => String(d.msg ?? '').replace(/^Value error, /, '')).join(' ')
+      else message = JSON.stringify(body.detail ?? body)
     } catch {
       /* keep status text */
     }

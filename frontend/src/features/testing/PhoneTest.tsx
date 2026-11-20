@@ -3,7 +3,7 @@ import { Icon } from '@/components/Icon'
 import { api, type Agent, type Health } from '@/lib/api'
 
 /** Place a real outbound call via Twilio/Exotel, or make this the inbound agent. */
-export function PhoneTest({ agent, health, onPlaced }: { agent: Agent; health: Health | null; onPlaced: () => void }) {
+export function PhoneTest({ agent, health, ready: providersReady, onPlaced }: { agent: Agent; health: Health | null; ready: boolean; onPlaced: () => void }) {
   const [to, setTo] = useState('+91')
   const [provider, setProvider] = useState<'twilio' | 'exotel'>(health?.twilio_configured || !health?.exotel_configured ? 'twilio' : 'exotel')
   const [status, setStatus] = useState('')
@@ -12,7 +12,7 @@ export function PhoneTest({ agent, health, onPlaced }: { agent: Agent; health: H
 
   const publicUrl = health?.public_base_url?.startsWith('https://')
   const configured = provider === 'twilio' ? health?.twilio_configured : health?.exotel_configured
-  const ready = configured && publicUrl && health?.provider_key_set
+  const ready = configured && publicUrl && providersReady
 
   const call = async () => {
     setError('')
@@ -28,7 +28,7 @@ export function PhoneTest({ agent, health, onPlaced }: { agent: Agent; health: H
   }
 
   const items: [boolean | undefined, string][] = [
-    [health?.provider_key_set, 'Voice AI engine key'],
+    [providersReady, "API keys for this agent's providers"],
     [publicUrl, `Public URL ${health?.public_base_url ? `(${health.public_base_url})` : '(PUBLIC_BASE_URL)'}`],
     [health?.twilio_configured, 'Twilio account + number'],
     [health?.exotel_configured, 'Exotel account + ExoPhone + flow'],

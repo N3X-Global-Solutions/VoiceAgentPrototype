@@ -13,7 +13,7 @@ export type View =
   | { page: 'new'; clientId?: string }
   | { page: 'agent'; clientId: string; agentId: string; tab: AgentTab }
 
-const AGENT_TABS: AgentTab[] = ['prompt', 'voice', 'speech', 'call', 'tools', 'logs']
+const AGENT_TABS: AgentTab[] = ['prompt', 'providers', 'voice', 'speech', 'call', 'tools', 'logs']
 
 export function viewFromHash(hash = window.location.hash): View {
   const [page, a, b, c] = hash.replace(/^#\/?/, '').split('/')
