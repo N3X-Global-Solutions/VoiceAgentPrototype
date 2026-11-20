@@ -11,6 +11,15 @@ _PROVIDER = re.compile(r"sarvam(ai)?|saaras|saarika|bulbul|navana|bodhi|gnani|va
 def public_error(text: str) -> str:
     """Map a raw provider error to a message that doesn't name the provider."""
     lowered = text.lower()
+    if any(k in lowered for k in ("not enabled", "product_not_enabled", "scope_not_allowed", "not in allowed scopes")):
+        # Prefer the provider's own message field ('message': '...'), else the text after the last colon.
+        found = re.search(r"""['"]message['"]\s*:\s*['"]([^'"]+)['"]""", text)
+        reason = found.group(1) if found else re.sub(r"^\d{3}\s*-\s*", "", text.rsplit(": ", 1)[-1])
+        reason = _PROVIDER.sub("AI provider", reason)[:160]
+        return (
+            f"The provider hasn't enabled this service on your account: {reason}. "
+            "Ask the provider to enable it, or choose another provider in the agent's Providers tab."
+        )
     if any(k in lowered for k in ("invalid_subscription_key", "invalid api key", "401", "403", "unauthorized")):
         return "An AI provider rejected its API key. Check the provider keys in the server's .env."
     if any(k in lowered for k in ("insufficient", "quota", "402", "credits")):

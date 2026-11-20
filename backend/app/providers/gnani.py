@@ -34,7 +34,7 @@ from pipecat.utils.time import time_now_iso8601
 
 from app.core import config
 from app.providers.catalog import GNANI_TTS_V3, find_voice
-from app.providers.navana import _pcm_chunks
+from app.providers.navana import _pcm_chunks, rejection_text
 
 STT_URL = "wss://api.vachana.ai/stt/v3/stream"
 TTS_URL = "https://api.vachana.ai/api/v1/tts/inference"
@@ -151,7 +151,7 @@ class GnaniSTTService(WebsocketSTTService):
             await self._call_event_handler("on_connected")
         except Exception as e:
             self._websocket = None
-            await self.push_error(error_msg=f"Speech recognition connection failed: {e}", exception=e)
+            await self.push_error(error_msg=f"Speech recognition connection failed: {rejection_text(e)}", exception=e)
 
     async def _disconnect_websocket(self):
         try:

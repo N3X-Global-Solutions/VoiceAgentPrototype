@@ -58,6 +58,24 @@ def stt_model(language: str, auto_detect: bool) -> str:
     return _STT_MODELS[language]
 
 
+def rejection_text(e: Exception) -> str:
+    """The provider's own reason when it refuses the WebSocket upgrade (e.g. 403 product_not_enabled)."""
+    response = getattr(e, "response", None)
+    if response is None:
+        return str(e)
+    body = bytes(getattr(response, "body", b"") or b"").decode(errors="replace")
+    try:
+        data = json.loads(body)
+        detail = data.get("detail", data) if isinstance(data, dict) else data
+        if isinstance(detail, dict):
+            reason = detail.get("message") or detail.get("error") or detail.get("error_code")
+            code = detail.get("error") or detail.get("error_code")
+            body = f"{reason} ({code})" if code and code != reason else str(reason)
+    except (ValueError, AttributeError):
+        pass
+    return f"HTTP {response.status_code}: {body[:200]}" if body else f"HTTP {response.status_code}"
+
+
 def _headers() -> dict[str, str]:
     headers = {"X-Api-Key": config.NAVANA_API_KEY}
     if config.NAVANA_CUSTOMER_ID:  # legacy bodhi.navana.ai accounts
@@ -152,7 +170,7 @@ class NavanaSTTService(WebsocketSTTService):
             await self._call_event_handler("on_connected")
         except Exception as e:
             self._websocket = None
-            await self.push_error(error_msg=f"Speech recognition connection failed: {e}", exception=e)
+            await self.push_error(error_msg=f"Speech recognition connection failed: {rejection_text(e)}", exception=e)
 
     async def _disconnect_websocket(self):
         try:
