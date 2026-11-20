@@ -9,6 +9,7 @@ export type View =
   | { page: 'agents' }
   | { page: 'clients' }
   | { page: 'calls' }
+  | { page: 'usage' }
   | { page: 'settings' }
   | { page: 'new'; clientId?: string }
   | { page: 'agent'; clientId: string; agentId: string; tab: AgentTab }
@@ -30,6 +31,8 @@ export function viewFromHash(hash = window.location.hash): View {
       return { page: 'clients' }
     case 'calls':
       return { page: 'calls' }
+    case 'usage':
+      return { page: 'usage' }
     case 'settings':
       return { page: 'settings' }
     default:

@@ -134,3 +134,9 @@ export const SOURCE_LABEL: Record<Price['source'], string> = {
   quoted: 'Your quoted rate',
   estimate: 'Estimate: confirm in the provider console',
 }
+
+/** Worst credit state across providers, for the sidebar dot: red if any is out, amber if any is low. */
+export function creditsTone(health: Health | null): 'amber' | 'red' | null {
+  const states = Object.values(health?.credits ?? {}).map((c) => c.status)
+  return states.includes('empty') ? 'red' : states.includes('low') ? 'amber' : null
+}

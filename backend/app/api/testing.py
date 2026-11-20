@@ -6,13 +6,14 @@ import time
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
+from loguru import logger
 from pydantic import BaseModel, Field
 from sqlmodel import Session
 
 from app.agents.models import LANGUAGES, SCRIPTS, AgentConfig
 from app.agents.tools import openai_tools, run_http_tool
 from app.api.deps import agent_or_404
-from app.core.db import get_session
+from app.core.db import UsageCharge, get_session
 from app.core.errors import NO_LLM_KEY, public_error
 from app.providers import catalog
 from app.providers.factory import chat_request
@@ -37,7 +38,6 @@ async def chat(agent_id: str, body: ChatIn, db: Session = Depends(get_session)):
     provider = cfg.llm_provider
     if not catalog.configured(provider):
         raise HTTPException(400, f"This agent's AI model needs {catalog.providers()[provider]['key_env']} in the server's .env.")
-    prices = catalog.part(provider, "llm")["prices"]
     history = [m for m in body.messages[-20:] if m.get("role") in ("user", "assistant")]
     messages: list[dict] = [
         {"role": "system", "content": cfg.system_prompt()},
@@ -54,10 +54,8 @@ async def chat(agent_id: str, body: ChatIn, db: Session = Depends(get_session)):
 
     async with httpx.AsyncClient(timeout=30) as client:
         for _ in range(4):  # at most 3 tool rounds, then a final answer
-            data = await _chat(client, provider, messages, cfg.temperature, tools)
-            usage = data.get("usage") or {}
-            cost += (usage.get("prompt_tokens", 0) / 1e6 * prices["input"].rate
-                     + usage.get("completion_tokens", 0) / 1e6 * prices["output"].rate)
+            data = await _chat(client, provider, messages, cfg.temperature, tools, db, source="chat", agent_id=agent.id)
+            cost += data["_cost_inr"]
             message = data["choices"][0]["message"]
             calls = message.get("tool_calls") or []
             if not calls:
@@ -92,7 +90,18 @@ async def chat(agent_id: str, body: ChatIn, db: Session = Depends(get_session)):
     }
 
 
-async def _chat(client: httpx.AsyncClient, provider: str, messages: list[dict], temperature: float, tools: list[dict]) -> dict:
+async def _chat(
+    client: httpx.AsyncClient,
+    provider: str,
+    messages: list[dict],
+    temperature: float,
+    tools: list[dict],
+    db: Session,
+    source: str,
+    agent_id: str = "",
+) -> dict:
+    """One chat completion. Its cost is recorded against the provider (Usage page) and
+    returned as data["_cost_inr"]."""
     url, headers, extra = chat_request(provider)
     payload = {
         "messages": messages,
@@ -112,11 +121,32 @@ async def _chat(client: httpx.AsyncClient, provider: str, messages: list[dict], 
         raise HTTPException(402, public_error("insufficient credits"))
     if resp.status_code >= 300:
         raise HTTPException(502, public_error(f"AI provider error {resp.status_code}: {resp.text[:300]}"))
-    return resp.json()
+    data = resp.json()
+    data["_cost_inr"] = _record_charge(db, provider, data.get("usage") or {}, source, agent_id)
+    return data
+
+
+def _record_charge(db: Session, provider: str, usage: dict, source: str, agent_id: str) -> float:
+    prices = catalog.part(provider, "llm")["prices"]
+    prompt = usage.get("prompt_tokens") or 0
+    cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens") or 0
+    completion = usage.get("completion_tokens") or 0
+    cost = (
+        max(prompt - cached, 0) / 1e6 * prices["input"].rate
+        + cached / 1e6 * prices["cached"].rate
+        + completion / 1e6 * prices["output"].rate
+    )
+    try:
+        db.add(UsageCharge(provider=provider, source=source, agent_id=agent_id, amount_inr=round(cost, 6), input_tokens=prompt, output_tokens=completion))
+        db.commit()
+    except Exception as e:  # metering must never break the test itself
+        db.rollback()
+        logger.warning(f"Could not record {source} usage: {e}")
+    return cost
 
 
 @router.post("/api/translate")
-async def translate(body: TranslateIn):
+async def translate(body: TranslateIn, db: Session = Depends(get_session)):
     """Translate an agent's fixed phrases (greeting, goodbye...) into its language (~Rs 0.01)."""
     if body.language not in LANGUAGES:
         raise HTTPException(422, f"Unsupported language {body.language}")
@@ -140,7 +170,7 @@ async def translate(body: TranslateIn):
         {"role": "user", "content": json.dumps(texts, ensure_ascii=False)},
     ]
     async with httpx.AsyncClient(timeout=30) as client:
-        data = await _chat(client, provider, messages, temperature=0.2, tools=[])
+        data = await _chat(client, provider, messages, temperature=0.2, tools=[], db=db, source="translate")
     content = (data["choices"][0]["message"].get("content") or "").strip()
     content = content.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     try:

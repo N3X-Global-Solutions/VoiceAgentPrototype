@@ -70,6 +70,32 @@ class CallSession(SQLModel, table=True):
     error: str = ""
 
 
+class UsageCharge(SQLModel, table=True):
+    """Provider spend outside calls: text chat tests and phrase translation (AI model tokens)."""
+
+    id: str = Field(default_factory=_id, primary_key=True)
+    at: datetime = Field(default_factory=_now, index=True)
+    provider: str = Field(index=True)
+    part: str = "llm"
+    source: str = "chat"  # chat | translate
+    agent_id: str = ""
+    amount_inr: float = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+
+
+class CreditEntry(SQLModel, table=True):
+    """Credits you hold with a provider. "balance" = the balance its dashboard showed at that time;
+    "topup" = credits added. Remaining = latest balance + later top-ups - spend since."""
+
+    id: str = Field(default_factory=_id, primary_key=True)
+    provider: str = Field(index=True)
+    kind: str  # balance | topup
+    amount_inr: float
+    note: str = ""
+    at: datetime = Field(default_factory=_now)
+
+
 class Setting(SQLModel, table=True):
     key: str = Field(primary_key=True)
     value: str = ""

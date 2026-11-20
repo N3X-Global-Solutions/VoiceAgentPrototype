@@ -100,6 +100,7 @@ export type Health = {
   twilio_configured: boolean
   exotel_configured: boolean
   inbound_agent_id: string
+  credits: Record<string, { remaining: number; status: CreditState }> // only providers with credit entries
   max_call_seconds_cap: number
   max_cost_per_call_inr: number
   rates: Rates
@@ -161,6 +162,51 @@ export type CallSession = {
   transcript: { role: 'user' | 'agent' | 'event'; text: string }[]
   latency_turns: LatencyTurn[]
   error: string
+}
+
+export type CreditState = 'ok' | 'low' | 'empty'
+export type UsagePart = 'stt' | 'tts' | 'llm' | 'telephony' | 'other'
+
+export type CreditEntry = { id: string; kind: 'balance' | 'topup'; amount_inr: number; note: string; at: string }
+
+/** Credits left with a provider: the last balance entered + later top-ups - spend since then. */
+export type CreditStatus = {
+  since: string
+  balance_at_since: number
+  topups: number
+  funded: number
+  used: number
+  remaining: number
+  per_day: number // average daily spend over the last 7 days
+  days_left: number | null
+  alert_below: number | null
+  alert_threshold: number
+  status: CreditState
+}
+
+export type ProviderUsage = {
+  id: string
+  name: string
+  kind: 'voice_ai' | 'phone'
+  configured: boolean
+  spent: number
+  by_part: Partial<Record<UsagePart, number>>
+  units: { stt_secs: number; tts_chars: number; input_tokens: number; output_tokens: number; phone_secs: number }
+  calls: number
+  tests: number // text chat tests and translations
+  credit: CreditStatus | null
+  entries: CreditEntry[]
+}
+
+export type UsageReport = {
+  since: string | null
+  days: number
+  total: number
+  prev_total: number | null // the period before this one, same length (null for all time)
+  calls: number
+  call_minutes: number
+  providers: ProviderUsage[]
+  daily: { date: string; by_provider: Record<string, number> }[]
 }
 
 // Fired when the session expires mid-use, so the app can show the sign-in page.
@@ -236,6 +282,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ language, texts }),
     }),
+  usage: (days: number) => request<UsageReport>(`/api/usage?days=${days}&tz=${new Date().getTimezoneOffset()}`),
+  addCredit: (provider: string, kind: CreditEntry['kind'], amount_inr: number, note: string) =>
+    request<CreditEntry>('/api/usage/credits', { method: 'POST', body: JSON.stringify({ provider, kind, amount_inr, note }) }),
+  deleteCredit: (id: string) => request<void>(`/api/usage/credits/${id}`, { method: 'DELETE' }),
+  setCreditAlert: (provider: string, below_inr: number | null) =>
+    request<{ below_inr: number | null }>(`/api/usage/alerts/${provider}`, { method: 'PUT', body: JSON.stringify({ below_inr }) }),
   calls: (agentId?: string, limit = 50) =>
     request<CallSession[]>(`/api/calls?limit=${limit}${agentId ? `&agent_id=${encodeURIComponent(agentId)}` : ''}`),
 }

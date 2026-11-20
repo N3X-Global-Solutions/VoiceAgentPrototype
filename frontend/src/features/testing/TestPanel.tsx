@@ -30,6 +30,10 @@ export function TestPanel({
     ['llm', agent.config.llm_provider],
     ['tts', agent.config.tts_provider],
   ] as const
+  // Providers of this agent that are low on (or out of) the credits entered on the Usage page.
+  const lowCredit = [...new Set(parts.map(([, id]) => id))]
+    .map((id) => ({ id, credit: health?.credits?.[id] }))
+    .filter((x) => x.credit && x.credit.status !== 'ok')
 
   return (
     <aside className="card test-panel">
@@ -71,6 +75,16 @@ export function TestPanel({
             </span>
           </div>
         )}
+        {lowCredit.map(({ id, credit }) => (
+          <div key={id} className={`banner tone-${credit!.status === 'empty' ? 'red' : 'amber'}`}>
+            <Icon name="coins" />
+            <span className="grow">
+              {providerName(catalog, id)} {credit!.status === 'empty' ? 'has no credit left by our count' : `is low on credit: ₹${credit!.remaining.toFixed(2)} left`}.
+              {' '}
+              <a href="#/usage">Usage & credits</a>
+            </span>
+          </div>
+        ))}
         {tab === 'browser' && <BrowserCall agent={agent} health={health} ready={missing.length === 0} onEnded={onCallEnded} />}
         {tab === 'chat' && <ChatTest agent={agent} />}
         {tab === 'phone' && <PhoneTest agent={agent} health={health} ready={missing.length === 0} onPlaced={onCallEnded} />}

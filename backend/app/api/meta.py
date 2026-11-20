@@ -1,11 +1,13 @@
 """Health checks and the catalog (languages, voices, default agent config)."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlmodel import Session
 
 from app.agents.models import AgentConfig, LANGUAGES
 from app.core import config
-from app.core.db import get_setting
+from app.core.db import get_session, get_setting
 from app.providers import catalog as providers_catalog
+from app.providers import usage
 
 router = APIRouter(tags=["meta"])
 
@@ -17,7 +19,7 @@ def healthz():
 
 
 @router.get("/api/health")
-def health():
+def health(db: Session = Depends(get_session)):
     return {
         # True when at least one voice AI provider has a key; per-provider status below.
         "provider_key_set": any(providers_catalog.configured(p) for p in providers_catalog.providers()),
@@ -26,6 +28,8 @@ def health():
         "twilio_configured": config.twilio_configured(),
         "exotel_configured": config.exotel_configured(),
         "inbound_agent_id": get_setting("inbound_agent_id"),
+        # Credits left per provider (only providers with credit entries): {remaining, status}.
+        "credits": {p: {"remaining": c["remaining"], "status": c["status"]} for p, c in usage.credit_status(db).items()},
         "max_call_seconds_cap": config.MAX_CALL_SECONDS_CAP,
         "max_cost_per_call_inr": config.MAX_COST_PER_CALL_INR,
         # Phone-line rates (INR, ex-GST); voice AI rates are per provider, in /api/catalog.

@@ -72,6 +72,12 @@
   --font: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans Tamil', sans-serif;
   --mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
+  /* Chart series, one hue per provider in fixed order (colour-blind checked). */
+  --series-1: #14948a;
+  --series-2: #3874d8;
+  --series-3: #d4587c;
+  --series-4: #b5852a;
+  --series-5: #6f7fca;
   color-scheme: light;
 }
 
@@ -113,6 +119,11 @@
     --shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.55);
     --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.7);
     --overlay: rgba(0, 0, 0, 0.6);
+    --series-1: #1fa596;
+    --series-2: #4a84e6;
+    --series-3: #d65a80;
+    --series-4: #b48530;
+    --series-5: #7385d6;
     color-scheme: dark;
   }
 }
@@ -153,6 +164,11 @@
   --shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.55);
   --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.7);
   --overlay: rgba(0, 0, 0, 0.6);
+  --series-1: #1fa596;
+  --series-2: #4a84e6;
+  --series-3: #d65a80;
+  --series-4: #b48530;
+  --series-5: #7385d6;
   color-scheme: dark;
 }
 

@@ -9,7 +9,9 @@ import { CallLogsPage } from '@/features/calls/CallLogsPage'
 import { ClientsPage } from '@/features/clients/ClientsPage'
 import { OverviewPage } from '@/features/overview/OverviewPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
+import { UsagePage } from '@/features/usage/UsagePage'
 import { api, type Catalog, type Client, type Health } from '@/lib/api'
+import { creditsTone } from '@/lib/providers'
 import { hashFor, viewFromHash, type Navigate, type View } from './routes'
 
 // Sidebar: pinned open, or a collapsed icon rail that expands while hovered. Remembered per browser.
@@ -28,6 +30,7 @@ const NAV: { page: View['page']; label: string; icon: IconName }[] = [
   { page: 'agents', label: 'Agents', icon: 'bot' },
   { page: 'clients', label: 'Clients', icon: 'users' },
   { page: 'calls', label: 'Call logs', icon: 'history' },
+  { page: 'usage', label: 'Usage & credits', icon: 'coins' },
 ]
 
 /** Signed-in console: sidebar, top bar, and the page for the current URL hash. */
@@ -101,6 +104,7 @@ export function AppShell({ email, onSignOut }: { email: string; onSignOut: () =>
           return client && agent ? { client, agent } : null
         })()
       : null
+  const lowCredits = creditsTone(health)
   const activeNav = view.page === 'agent' || view.page === 'new' ? 'agents' : view.page
 
   const crumbs: { label: string; to?: View }[] =
@@ -139,6 +143,8 @@ export function AppShell({ email, onSignOut }: { email: string; onSignOut: () =>
     )
   } else if (view.page === 'calls') {
     content = <CallLogsPage clients={list} onOpenAgent={(r) => navigate({ page: 'agent', clientId: r.clientId, agentId: r.agentId, tab: 'logs' })} />
+  } else if (view.page === 'usage') {
+    content = <UsagePage onCreditsChanged={() => void reload()} />
   } else if (view.page === 'settings') {
     content = <SettingsPage email={email} health={health} catalog={catalog} clients={list} navigate={navigate} onSignOut={onSignOut} />
   } else if (view.page === 'new') {
@@ -232,6 +238,9 @@ export function AppShell({ email, onSignOut }: { email: string; onSignOut: () =>
               <span className="side-label">{n.label}</span>
               {n.page === 'agents' && clients && <span className="count">{agentCount}</span>}
               {n.page === 'clients' && clients && <span className="count">{list.length}</span>}
+              {n.page === 'usage' && lowCredits && (
+                <span className={`nav-alert tone-${lowCredits}`} title={lowCredits === 'red' ? 'A provider is out of credit' : 'A provider is low on credit'} />
+              )}
             </button>
           ))}
           <span className="nav-label side-label">Account</span>

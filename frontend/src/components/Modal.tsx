@@ -16,6 +16,7 @@ export function Modal({
   onKeyDown,
   children,
   labelledBy = 'modal-title',
+  size,
 }: {
   title: ReactNode
   subtitle?: ReactNode
@@ -26,6 +27,7 @@ export function Modal({
   onKeyDown?: (e: KeyboardEvent) => void
   children: ReactNode
   labelledBy?: string
+  size?: 'sm'
 }) {
   const panelRef = useRef<HTMLDivElement>(null)
   const onCloseRef = useRef(onClose)
@@ -54,7 +56,7 @@ export function Modal({
 
   return createPortal(
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby={labelledBy} tabIndex={-1} ref={panelRef}>
+      <div className={`modal${size ? ` ${size}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={labelledBy} tabIndex={-1} ref={panelRef}>
         <header className="modal-head">
           {leading}
           <div className="grow">
