@@ -57,13 +57,16 @@ class CallMetricsObserver(BaseObserver):
         pause_ms: int | None = None,
         channel: str = "browser",
         pricing: CallPricing | None = None,
+        telephony_rate: tuple[float, int] | None = None,
     ):
         super().__init__(observe_every_push=False)
         self._send = send
         # Rates of the providers this call uses.
         self.pricing = pricing or call_pricing("sarvam", "sarvam", "sarvam")
-        # Phone channels (exotel/twilio) add a per-minute line cost; browser calls don't.
+        # Phone channels (exotel/twilio/plivo) add a per-minute line cost; browser calls don't.
+        # A client's own number can carry its own rate (INR per minute, pulse seconds).
         self.channel = channel
+        self.telephony_rate = telephony_rate
         self.ended_at: float | None = None
         # Configured silence the caller must leave before their turn ends (None = unknown
         # provider default). Shown next to each turn: it is waited before the clock starts.
@@ -105,7 +108,7 @@ class CallMetricsObserver(BaseObserver):
         """Cost in INR per part: speech recognition, voice, AI model and phone line."""
         p = self.pricing
         uncached = max(self.llm_prompt_tokens - self.llm_cached_tokens, 0)
-        rate, pulse = config.telephony_rate(self.channel)
+        rate, pulse = self.telephony_rate or config.telephony_rate(self.channel)
         billed_secs = math.ceil(self.line_seconds() / pulse) * pulse if rate and pulse else 0
         return {
             "stt": round(self.stt_billed_seconds() / 60 * p.stt_per_min, 4),

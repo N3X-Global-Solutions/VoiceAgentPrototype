@@ -27,7 +27,7 @@ export function Modal({
   onKeyDown?: (e: KeyboardEvent) => void
   children: ReactNode
   labelledBy?: string
-  size?: 'sm'
+  size?: 'sm' | 'md'
 }) {
   const panelRef = useRef<HTMLDivElement>(null)
   const onCloseRef = useRef(onClose)

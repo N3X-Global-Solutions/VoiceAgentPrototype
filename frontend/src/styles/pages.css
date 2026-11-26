@@ -1042,6 +1042,10 @@
   flex: 1;
 }
 
+.modal.md {
+  width: min(720px, 100%);
+}
+
 .modal-foot {
   display: flex;
   align-items: center;
@@ -1345,5 +1349,60 @@
 
   .modal-foot {
     justify-content: flex-end;
+  }
+}
+
+/* ---------------------------------------------------------------- client phone numbers */
+
+.line-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.line-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.line-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.line-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.line-detail {
+  font-size: 12.5px;
+  line-height: 1.5;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--tone-soft);
+  color: var(--tone-text);
+}
+
+.line-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.line-form {
+  padding: 20px;
+}
+
+@media (max-width: 640px) {
+  .line-main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .line-form {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

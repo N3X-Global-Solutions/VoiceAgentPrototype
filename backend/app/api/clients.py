@@ -9,7 +9,8 @@ from sqlmodel import Session, select
 
 from app.agents.models import AgentConfig
 from app.api.deps import agent_or_404, agent_out, client_payload
-from app.core.db import Agent, CallSession, Client, get_session, set_setting
+from app.core.db import Agent, CallSession, Client, PhoneLine, get_session, set_setting
+from app.telephony import lines
 
 router = APIRouter(tags=["clients & agents"])
 
@@ -72,10 +73,14 @@ def update_client(client_id: str, body: ClientIn, db: Session = Depends(get_sess
 
 
 @router.delete("/api/clients/{client_id}", status_code=204)
-def delete_client(client_id: str, db: Session = Depends(get_session)):
+async def delete_client(client_id: str, db: Session = Depends(get_session)):
     client = db.get(Client, client_id)
     if not client:
         raise HTTPException(404, "Client not found")
+    for line in db.exec(select(PhoneLine).where(PhoneLine.client_id == client_id)).all():
+        if line.provider == "plivo":
+            await lines.disconnect_plivo(line)  # best effort: give the number back
+        db.delete(line)
     agent_ids = db.exec(select(Agent.id).where(Agent.client_id == client_id)).all()
     if agent_ids:
         db.exec(delete(CallSession).where(CallSession.agent_id.in_(agent_ids)))

@@ -57,9 +57,38 @@ export type Client = {
   notes: string
   created_at: string
   agents: Agent[]
+  phone_lines: PhoneLine[]
 }
 
-export type ClientFields = Omit<Client, 'id' | 'created_at' | 'agents'>
+export type ClientFields = Omit<Client, 'id' | 'created_at' | 'agents' | 'phone_lines'>
+
+export type PhoneProvider = 'exotel' | 'plivo'
+export type LineStatus = 'unchecked' | 'ok' | 'warning' | 'error'
+
+/** A client's own number on their own Exotel or Plivo account. Secrets come back masked (••••1234). */
+export type PhoneLine = {
+  id: string
+  client_id: string
+  provider: PhoneProvider
+  label: string
+  number: string
+  inbound_agent_id: string
+  settings: Record<string, string> // exotel: account_sid, subdomain, flow_app_id · plivo: auth_id, app_id
+  secrets: Record<string, string>
+  price_per_min: number | null
+  pulse_secs: number | null
+  status: LineStatus
+  status_detail: string
+  checked_at: string | null
+  created_at: string
+  urls: { voicebot?: string; answer?: string } // empty until PUBLIC_BASE_URL is https
+}
+
+/** Blank secrets keep the saved ones. */
+export type PhoneLineInput = Pick<PhoneLine, 'provider' | 'label' | 'number' | 'inbound_agent_id' | 'settings' | 'secrets' | 'price_per_min' | 'pulse_secs'>
+
+/** Where an outbound call is placed from: the workspace number in .env, or one of the client's numbers. */
+export type CallRoute = { provider: 'twilio' | 'exotel' } | { line_id: string }
 
 /** language "*" = the voice speaks every language its provider supports. */
 export type Voice = { id: string; name: string; style: string; language: string; group: string; provider: ProviderId }
@@ -112,6 +141,8 @@ export type Rates = {
   exotel_pulse_secs: number
   twilio_per_min: number
   twilio_pulse_secs: number
+  plivo_per_min: number
+  plivo_pulse_secs: number
 }
 
 /** Per-part cost of a call in INR. Empty for calls made before the breakdown existed. */
@@ -272,11 +303,16 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ messages }),
     }),
-  phoneCall: (id: string, to: string, provider: 'twilio' | 'exotel') =>
+  phoneCall: (id: string, to: string, route: CallRoute) =>
     request<{ call_session_id: string }>(`/api/agents/${id}/phone-call`, {
       method: 'POST',
-      body: JSON.stringify({ to, provider }),
+      body: JSON.stringify({ to, ...route }),
     }),
+  addPhoneLine: (clientId: string, line: PhoneLineInput) =>
+    request<PhoneLine>(`/api/clients/${clientId}/phone-lines`, { method: 'POST', body: JSON.stringify(line) }),
+  updatePhoneLine: (id: string, line: PhoneLineInput) => request<PhoneLine>(`/api/phone-lines/${id}`, { method: 'PUT', body: JSON.stringify(line) }),
+  checkPhoneLine: (id: string) => request<PhoneLine>(`/api/phone-lines/${id}/check`, { method: 'POST' }),
+  deletePhoneLine: (id: string) => request<{ warning: string }>(`/api/phone-lines/${id}`, { method: 'DELETE' }),
   translate: (language: string, texts: Record<string, string>) =>
     request<{ texts: Record<string, string> }>('/api/translate', {
       method: 'POST',

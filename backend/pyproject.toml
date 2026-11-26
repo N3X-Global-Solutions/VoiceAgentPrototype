@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Voice agent runtime + API: Sarvam STT/LLM/TTS via Pipecat"
 requires-python = ">=3.12"
 dependencies = [
+    "cryptography>=44.0.0",
     "fastapi>=0.162.0",
     "httpx>=0.28.1",
     "loguru>=0.7.3",

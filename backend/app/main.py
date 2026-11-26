@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from pydantic import ValidationError
 
-from app.api import auth, calls, clients, live, meta, testing, usage
+from app.api import auth, calls, clients, live, meta, phone_lines, testing, usage
 from app.core import config
 from app.core.db import init_db
 from app.core.security import AuthMiddleware
@@ -42,7 +42,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for module in (auth, meta, clients, testing, live, calls, usage):
+for module in (auth, meta, clients, phone_lines, testing, live, calls, usage):
     app.include_router(module.router)
 
 

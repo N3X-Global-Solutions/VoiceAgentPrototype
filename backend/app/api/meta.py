@@ -38,6 +38,8 @@ def health(db: Session = Depends(get_session)):
             "exotel_pulse_secs": config.EXOTEL_PULSE_SECS,
             "twilio_per_min": config.PRICE_TWILIO_PER_MIN,
             "twilio_pulse_secs": config.TWILIO_PULSE_SECS,
+            "plivo_per_min": config.PRICE_PLIVO_PER_MIN,
+            "plivo_pulse_secs": config.PLIVO_PULSE_SECS,
         },
     }
 

@@ -108,6 +108,13 @@ export function SettingsPage({
             <Field label="Exotel: Voicebot applet URL" hint="Outbound calls are matched to the agent that placed them; inbound calls go to the inbound agent.">
               <CopyField value={`${wsBase}/ws/telephony`} />
             </Field>
+            <p className="muted small">
+              These are for the workspace number in .env. Clients' own Exotel and Plivo numbers are added on the{' '}
+              <button className="row-link" style={{ display: 'inline' }} onClick={() => navigate({ page: 'clients' })}>
+                Clients page
+              </button>
+              : each Exotel number gets its own Voicebot URL, and Plivo numbers are connected automatically.
+            </p>
           </Section>
         </div>
 
@@ -152,6 +159,12 @@ export function SettingsPage({
                     label="Phone line: Twilio"
                     value={health.rates.twilio_per_min ? `₹${health.rates.twilio_per_min} per minute, billed per ${health.rates.twilio_pulse_secs}s` : 'Not set'}
                     env="PRICE_TWILIO_PER_MIN, TWILIO_PULSE_SECS"
+                  />
+                  <RateRow
+                    label="Phone line: Plivo"
+                    value={health.rates.plivo_per_min ? `₹${health.rates.plivo_per_min} per minute, billed per ${health.rates.plivo_pulse_secs}s` : 'Not set'}
+                    env="PRICE_PLIVO_PER_MIN, PLIVO_PULSE_SECS"
+                    note="default for clients' Plivo numbers; each number can set its own"
                   />
                 </dl>
               </div>

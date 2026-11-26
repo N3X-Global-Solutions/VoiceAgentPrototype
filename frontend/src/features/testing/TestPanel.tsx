@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Icon } from '@/components/Icon'
-import type { Agent, Catalog, Health } from '@/lib/api'
+import type { Agent, Catalog, Health, PhoneLine } from '@/lib/api'
 import { PART_LABEL, missingKeys, providerName } from '@/lib/providers'
 import { BrowserCall } from './BrowserCall'
 import { ChatTest } from './ChatTest'
@@ -11,6 +11,7 @@ export function TestPanel({
   agent,
   catalog,
   health,
+  phoneLines,
   dirty,
   onCallEnded,
   onChangeProviders,
@@ -18,6 +19,7 @@ export function TestPanel({
   agent: Agent
   catalog: Catalog
   health: Health | null
+  phoneLines: PhoneLine[]
   dirty?: boolean
   onCallEnded: () => void
   onChangeProviders: () => void
@@ -87,7 +89,7 @@ export function TestPanel({
         ))}
         {tab === 'browser' && <BrowserCall agent={agent} health={health} ready={missing.length === 0} onEnded={onCallEnded} />}
         {tab === 'chat' && <ChatTest agent={agent} />}
-        {tab === 'phone' && <PhoneTest agent={agent} health={health} ready={missing.length === 0} onPlaced={onCallEnded} />}
+        {tab === 'phone' && <PhoneTest agent={agent} health={health} lines={phoneLines} ready={missing.length === 0} onPlaced={onCallEnded} />}
       </div>
     </aside>
   )

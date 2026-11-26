@@ -79,7 +79,8 @@ def _call_spend(c: CallSession) -> Iterable[Spend]:
         c.id,
         {"input_tokens": c.llm_prompt_tokens, "output_tokens": c.llm_completion_tokens},
     )
-    if c.channel in PHONE_LINES and (b.get("telephony") or b.get("telephony_billed_secs")):
+    # A client's own number (line_id) is billed to the client's account, not to your credits.
+    if c.channel in PHONE_LINES and not c.line_id and (b.get("telephony") or b.get("telephony_billed_secs")):
         yield Spend(at, c.channel, "telephony", b.get("telephony", 0), "call", c.id, {"phone_secs": b.get("telephony_billed_secs", 0)})
 
 

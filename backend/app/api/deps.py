@@ -4,7 +4,8 @@ from fastapi import HTTPException
 from sqlmodel import Session, select
 
 from app.agents.models import AgentConfig
-from app.core.db import Agent, Client
+from app.core.db import Agent, Client, PhoneLine
+from app.telephony.lines import line_out
 
 
 def agent_or_404(db: Session, agent_id: str) -> Agent:
@@ -21,4 +22,5 @@ def agent_out(agent: Agent) -> dict:
 
 def client_payload(db: Session, client: Client) -> dict:
     agents = db.exec(select(Agent).where(Agent.client_id == client.id)).all()
-    return {**client.model_dump(), "agents": [agent_out(a) for a in agents]}
+    phone_lines = db.exec(select(PhoneLine).where(PhoneLine.client_id == client.id).order_by(PhoneLine.created_at)).all()
+    return {**client.model_dump(), "agents": [agent_out(a) for a in agents], "phone_lines": [line_out(x) for x in phone_lines]}

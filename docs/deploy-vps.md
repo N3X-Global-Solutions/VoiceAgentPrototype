@@ -128,6 +128,8 @@ Go to **https://voicepilot.n3xglobalsolutions.com** and sign in with the admin e
 - **Twilio:** your number → Voice webhook, HTTP POST.
 - **Exotel:** the Voicebot applet.
 
+Clients' own Exotel/Plivo numbers are added per client on the **Clients** page. Back up the data volume as a whole: it holds `.credentials_key`, which their stored API keys need (or set `CREDENTIALS_KEY` in `.env`).
+
 ---
 
 ## Day-to-day

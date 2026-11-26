@@ -48,6 +48,9 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "n3xadminpassword")
 # Signs the session cookie. If empty, one is generated and stored in DATA_DIR.
 SESSION_SECRET = os.getenv("SESSION_SECRET", "")
 SESSION_TTL_HOURS = int(os.getenv("SESSION_TTL_HOURS", "72"))
+# Encrypts clients' phone-provider credentials in the database (a Fernet key). If empty, one is
+# generated once and kept in DATA_DIR. Back it up with the database: without it they can't be read.
+CREDENTIALS_KEY = os.getenv("CREDENTIALS_KEY", "")
 
 # Credit guards: every call is hard-capped, whatever the agent config says.
 MAX_CALL_SECONDS_CAP = int(os.getenv("MAX_CALL_SECONDS_CAP", "300"))
@@ -81,6 +84,9 @@ PRICE_EXOTEL_PER_MIN = _float("PRICE_EXOTEL_PER_MIN", 1.00)
 EXOTEL_PULSE_SECS = int(os.getenv("EXOTEL_PULSE_SECS", "60"))
 PRICE_TWILIO_PER_MIN = _float("PRICE_TWILIO_PER_MIN", 0.0)
 TWILIO_PULSE_SECS = int(os.getenv("TWILIO_PULSE_SECS", "60"))
+# Default for clients' Plivo numbers; each number can override its rate.
+PRICE_PLIVO_PER_MIN = _float("PRICE_PLIVO_PER_MIN", 0.0)
+PLIVO_PULSE_SECS = int(os.getenv("PLIVO_PULSE_SECS", "60"))
 
 
 def telephony_rate(channel: str) -> tuple[float, int]:
@@ -89,6 +95,8 @@ def telephony_rate(channel: str) -> tuple[float, int]:
         return PRICE_EXOTEL_PER_MIN, EXOTEL_PULSE_SECS
     if channel == "twilio":
         return PRICE_TWILIO_PER_MIN, TWILIO_PULSE_SECS
+    if channel == "plivo":
+        return PRICE_PLIVO_PER_MIN, PLIVO_PULSE_SECS
     return 0.0, 0
 
 

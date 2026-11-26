@@ -157,6 +157,8 @@ async def run_agent_call(
     phone_number: str = "",
     provider_call_id: str = "",
     call_session_id: str | None = None,
+    line_id: str = "",
+    telephony_rate: tuple[float, int] | None = None,
 ) -> str:
     """Run one call to completion and persist its transcript, latency and cost."""
     cfg = AgentConfig.model_validate(agent.config)
@@ -169,6 +171,7 @@ async def run_agent_call(
         call.direction = direction
         call.phone_number = phone_number or call.phone_number
         call.provider_call_id = provider_call_id or call.provider_call_id
+        call.line_id = line_id or call.line_id
         call.providers = {"stt": cfg.stt_provider, "llm": cfg.llm_provider, "tts": cfg.tts_provider}
         call.status = "active"
         db.add(call)
@@ -183,7 +186,9 @@ async def run_agent_call(
             await worker.queue_frame(RTVIServerMessageFrame(data=payload))
 
     pricing = catalog.call_pricing(cfg.stt_provider, cfg.tts_provider, cfg.llm_provider)
-    metrics = CallMetricsObserver(send=send_to_client, pause_ms=factory.pause_ms(cfg), channel=channel, pricing=pricing)
+    metrics = CallMetricsObserver(
+        send=send_to_client, pause_ms=factory.pause_ms(cfg), channel=channel, pricing=pricing, telephony_rate=telephony_rate
+    )
 
     stt, turn_params = factory.make_stt(cfg, in_sample_rate)
     tts = factory.make_tts(cfg, out_sample_rate)

@@ -38,6 +38,29 @@ class Agent(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=_now)
 
 
+class PhoneLine(SQLModel, table=True):
+    """A client's own phone number on their own Exotel or Plivo account (bring your own number)."""
+
+    id: str = Field(default_factory=_id, primary_key=True)
+    client_id: str = Field(foreign_key="client.id", index=True)
+    provider: str  # exotel | plivo
+    label: str = ""
+    number: str  # the number customers call, and the caller ID for outbound calls
+    inbound_agent_id: str = ""  # the agent that answers calls to this number
+    # Non-secret account settings: exotel {account_sid, subdomain, flow_app_id};
+    # plivo {auth_id, app_id, previous_app_id}. The app ids are set by us when we connect the number.
+    settings: dict = Field(default_factory=dict, sa_column=Column(JSON, nullable=False))
+    # API key/token, encrypted (app.telephony.lines). Never sent to the browser.
+    secrets: str = ""
+    # Phone-line rate for this number's calls; None = the provider default from .env.
+    price_per_min: float | None = None
+    pulse_secs: int | None = None
+    status: str = "unchecked"  # unchecked | ok | warning | error
+    status_detail: str = ""
+    checked_at: datetime | None = None
+    created_at: datetime = Field(default_factory=_now)
+
+
 class CallSession(SQLModel, table=True):
     id: str = Field(default_factory=_id, primary_key=True)
     agent_id: str = Field(foreign_key="agent.id", index=True)
@@ -45,6 +68,7 @@ class CallSession(SQLModel, table=True):
     channel: str  # browser | twilio | exotel | plivo | chat
     direction: str = "inbound"  # inbound | outbound
     phone_number: str = ""
+    line_id: str = ""  # the client's PhoneLine the call used; "" = the workspace number from .env
     provider_call_id: str = ""
     status: str = "active"  # active | completed | failed
     started_at: datetime = Field(default_factory=_now)

@@ -129,9 +129,12 @@ export function AppShell({ email, onSignOut }: { email: string; onSignOut: () =>
     content = (
       <ClientsPage
         clients={list}
+        health={health}
         navigate={navigate}
+        onChanged={reload}
         onDelete={async (c) => {
-          if (!confirm(`Delete ${c.name}? This also deletes its ${c.agents.length} agent(s) and their call history. This can't be undone.`)) return
+          const numbers = c.phone_lines.length ? ` and ${c.phone_lines.length} phone number(s)` : ''
+          if (!confirm(`Delete ${c.name}? This also deletes its ${c.agents.length} agent(s)${numbers} and their call history. This can't be undone.`)) return
           try {
             await api.deleteClient(c.id)
           } catch (e) {

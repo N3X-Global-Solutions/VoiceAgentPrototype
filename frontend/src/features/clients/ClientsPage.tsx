@@ -1,13 +1,30 @@
 import { useState } from 'react'
 import type { Navigate } from '@/app/routes'
 import { Icon } from '@/components/Icon'
-import { Avatar, Badge, EmptyState, PageHead } from '@/components/ui'
-import type { Client } from '@/lib/api'
+import { Avatar, Badge, Dot, EmptyState, PageHead } from '@/components/ui'
+import type { Client, Health } from '@/lib/api'
 import { formatDate } from '@/lib/format'
+import { LINE_STATUS } from '@/lib/phoneLines'
+import { PhoneLinesModal } from './PhoneLinesModal'
 
-/** Clients table: contact details, their agents, and delete. */
-export function ClientsPage({ clients, navigate, onDelete }: { clients: Client[]; navigate: Navigate; onDelete: (client: Client) => void }) {
+/** Clients table: contact details, their agents, their own phone numbers, and delete. */
+export function ClientsPage({
+  clients,
+  health,
+  navigate,
+  onDelete,
+  onChanged,
+}: {
+  clients: Client[]
+  health: Health | null
+  navigate: Navigate
+  onDelete: (client: Client) => void
+  onChanged: () => Promise<void> | void
+}) {
   const [query, setQuery] = useState('')
+  const [numbersFor, setNumbersFor] = useState<{ clientId: string; lineId?: string } | null>(null)
+  // Looked up on every render, so the modal shows the client as reloaded after each change.
+  const numbersClient = numbersFor ? clients.find((c) => c.id === numbersFor.clientId) : undefined
   const q = query.trim().toLowerCase()
   const shown = clients.filter(
     (c) => !q || c.name.toLowerCase().includes(q) || c.industry.toLowerCase().includes(q) || c.contact_name.toLowerCase().includes(q),
@@ -56,6 +73,7 @@ export function ClientsPage({ clients, navigate, onDelete }: { clients: Client[]
                     <th>Client</th>
                     <th>Contact</th>
                     <th>Agents</th>
+                    <th>Phone numbers</th>
                     <th>Created</th>
                     <th aria-label="Actions" />
                   </tr>
@@ -96,6 +114,23 @@ export function ClientsPage({ clients, navigate, onDelete }: { clients: Client[]
                           </button>
                         </div>
                       </td>
+                      <td>
+                        <div className="chips">
+                          {c.phone_lines.map((l) => (
+                            <button
+                              key={l.id}
+                              className="chip-link"
+                              onClick={() => setNumbersFor({ clientId: c.id, lineId: l.id })}
+                              title={`${l.provider === 'exotel' ? 'Exotel' : 'Plivo'} · ${LINE_STATUS[l.status].label}${l.status_detail ? `: ${l.status_detail}` : ''}`}
+                            >
+                              <Dot tone={LINE_STATUS[l.status].tone} /> <span className="mono">{l.number}</span>
+                            </button>
+                          ))}
+                          <button className="chip-link add" onClick={() => setNumbersFor({ clientId: c.id })} title="Manage this client's own phone numbers">
+                            <Icon name={c.phone_lines.length ? 'settings' : 'plus'} size={12} /> {c.phone_lines.length ? 'Manage' : 'Add number'}
+                          </button>
+                        </div>
+                      </td>
                       <td className="nowrap muted">{formatDate(c.created_at)}</td>
                       <td className="num">
                         <button className="btn btn-danger btn-sm btn-icon" onClick={() => onDelete(c)} title={`Delete ${c.name}`}>
@@ -115,6 +150,16 @@ export function ClientsPage({ clients, navigate, onDelete }: { clients: Client[]
           </>
         )}
       </div>
+      {numbersClient && (
+        <PhoneLinesModal
+          key={numbersClient.id}
+          client={numbersClient}
+          health={health}
+          initialLineId={numbersFor?.lineId}
+          onClose={() => setNumbersFor(null)}
+          onChanged={onChanged}
+        />
+      )}
     </>
   )
 }

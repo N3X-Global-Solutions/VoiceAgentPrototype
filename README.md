@@ -11,7 +11,7 @@ backend/                 FastAPI + Pipecat, managed with uv
   app/core/              settings (.env), database models, session security
   app/agents/            agent config model, voice catalog, HTTP tools
   app/voice/             the call pipeline (STT → LLM → TTS), metrics, text shaping
-  app/telephony/         Twilio / Exotel dialing and call matching
+  app/telephony/         Twilio / Exotel / Plivo dialing, call matching, clients' own numbers
   scripts/e2e_test.py    end-to-end test that plays the caller
 frontend/                React + Vite + TypeScript (imports use the @/ alias for src/)
   src/app/               auth gate, app shell (sidebar, top bar), hash routes
@@ -143,6 +143,15 @@ Trial accounts play a short Twilio notice before connecting.
 3. `.env`: `EXOTEL_API_KEY`, `EXOTEL_API_TOKEN`, `EXOTEL_ACCOUNT_SID`, `EXOTEL_SUBDOMAIN` (`api.exotel.com`, or `api.in.exotel.com` for Mumbai accounts), `EXOTEL_CALLER_ID` (your ExoPhone), `EXOTEL_FLOW_APP_ID`.
 4. **Outbound:** Test lab → Phone call → Exotel. The backend matches the incoming stream to the agent that dialed it.
 5. **Inbound:** point your ExoPhone at the same flow, and click **Use this agent for inbound calls**.
+
+### Clients' own numbers (Exotel or Plivo)
+
+The setup above is the **workspace number**, shared by every client. A client that already has an Exotel or Plivo account can use its own number instead: **Clients → Phone numbers → Add number**. Their API credentials are stored encrypted (`CREDENTIALS_KEY`), calls are billed to their account, and each number picks the agent that answers it. In an agent's Phone playground, **Call from** lists the client's numbers.
+
+- **Exotel:** enter the ExoPhone, account SID, region, API key/token and the flow's App ID. After saving, copy the number's own **Voicebot applet URL** (`wss://…/ws/telephony/line/<id>`) into the client's flow and attach the flow to the ExoPhone. Exotel has no API for this step.
+- **Plivo:** enter the number (with country code), Auth ID and Auth Token. Saving creates an application in the client's Plivo account and links the number to it, so inbound calls reach the agent with no manual setup. Removing the number gives back the application it had before.
+
+**Check** re-tests the credentials (and re-connects a Plivo number). `PUBLIC_BASE_URL` must be https.
 
 > Sarvam's own ₹59/month numbers only work with Sarvam's managed Voice Agents, so they can't be connected to this app.
 

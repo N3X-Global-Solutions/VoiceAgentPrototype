@@ -42,7 +42,7 @@ export function AgentWorkspace({
     p.stt_provider === p.llm_provider && p.llm_provider === p.tts_provider
       ? providerName(catalog, p.stt_provider)
       : [p.stt_provider, p.llm_provider, p.tts_provider].map((id) => providerName(catalog, id)).join(' → ')
-  const isInbound = health?.inbound_agent_id === agent.id
+  const isInbound = health?.inbound_agent_id === agent.id || client.phone_lines.some((l) => l.inbound_agent_id === agent.id)
 
   useEffect(() => {
     onDirtyChange(dirty)
@@ -128,6 +128,7 @@ export function AgentWorkspace({
           agent={agent}
           catalog={catalog}
           health={health}
+          phoneLines={client.phone_lines}
           dirty={dirty}
           onCallEnded={() => setHistoryKey((k) => k + 1)}
           onChangeProviders={() => navigate({ page: 'agent', clientId: client.id, agentId: agent.id, tab: 'providers' }, { replace: true })}
