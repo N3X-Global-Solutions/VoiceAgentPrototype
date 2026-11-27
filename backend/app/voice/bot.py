@@ -1,7 +1,7 @@
 """The voice agent runtime: one Pipecat pipeline per call, built from an agent's config.
 
-STT -> LLM -> TTS, each from the provider the agent picked (Sarvam, Navana or Gnani;
-see app/providers/). Sarvam speech recognition can let its server-side VAD drive turns
+STT -> LLM -> TTS, each from the provider the agent picked (Sarvam, Navana or Gnani, plus
+Plivo for the voice; see app/providers/). Sarvam speech recognition can let its server-side VAD drive turns
 ("robust"); every other setup uses local Silero VAD ("fast").
 """
 

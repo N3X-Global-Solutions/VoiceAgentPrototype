@@ -12,7 +12,7 @@ export type HttpTool = {
   timeout_secs: number
 }
 
-export type ProviderId = 'sarvam' | 'navana' | 'gnani'
+export type ProviderId = 'sarvam' | 'navana' | 'gnani' | 'plivo' // Plivo: voice only
 export type PartKind = 'stt' | 'llm' | 'tts'
 
 export type AgentConfig = {

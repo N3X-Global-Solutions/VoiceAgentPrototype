@@ -12,6 +12,7 @@ const SERIES: Record<string, string> = {
   gnani: 'var(--series-3)',
   exotel: 'var(--series-4)',
   twilio: 'var(--series-5)',
+  plivo: 'var(--series-6)',
 }
 const color = (id: string) => SERIES[id] ?? 'var(--border-strong)'
 

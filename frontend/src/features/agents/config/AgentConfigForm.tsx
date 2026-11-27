@@ -257,7 +257,13 @@ export function AgentConfigForm({ catalog, health, value, onChange, tab }: Props
                 Speaking pace <span className="value">{value.pace.toFixed(2)}×</span>
               </>
             }
-            hint={value.tts_provider === 'gnani' ? '1.00× is natural speed. Gnani rounds to the speeds its voice model supports.' : '1.00× is natural speed.'}
+            hint={
+              value.tts_provider === 'gnani'
+                ? '1.00× is natural speed. Gnani rounds to the speeds its voice model supports.'
+                : value.tts_provider === 'plivo'
+                  ? '1.00× is natural speed. Plivo voices speak between 0.70× and 1.20×; settings outside that are capped.'
+                  : '1.00× is natural speed.'
+            }
           >
             <input type="range" min={0.5} max={2} step={0.05} value={value.pace} onChange={(e) => set('pace', Number(e.target.value))} />
           </Field>

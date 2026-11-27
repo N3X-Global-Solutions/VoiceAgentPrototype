@@ -78,6 +78,7 @@
   --series-3: #d4587c;
   --series-4: #b5852a;
   --series-5: #6f7fca;
+  --series-6: #8a3d10;
   color-scheme: light;
 }
 
@@ -124,6 +125,7 @@
     --series-3: #d65a80;
     --series-4: #b48530;
     --series-5: #7385d6;
+    --series-6: #ae4200;
     color-scheme: dark;
   }
 }
@@ -169,6 +171,7 @@
   --series-3: #d65a80;
   --series-4: #b48530;
   --series-5: #7385d6;
+  --series-6: #ae4200;
   color-scheme: dark;
 }
 
