@@ -4,7 +4,7 @@
 import type { AgentConfig, Catalog, Health, PartKind, Price, Provider, ProviderId, Voice } from './api'
 
 /** Display names, for places that render without the catalog (call logs). */
-export const PROVIDER_NAME: Record<string, string> = { sarvam: 'Sarvam', navana: 'Navana', gnani: 'Gnani' }
+export const PROVIDER_NAME: Record<string, string> = { sarvam: 'Sarvam', navana: 'Navana', gnani: 'Gnani', plivo: 'Plivo' }
 
 export const PART_LABEL: Record<PartKind, string> = {
   stt: 'Speech recognition',

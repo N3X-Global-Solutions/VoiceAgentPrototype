@@ -5,7 +5,8 @@ Server logs keep the raw provider message; users see these generic versions inst
 
 import re
 
-_PROVIDER = re.compile(r"sarvam(ai)?|saaras|saarika|bulbul|navana|bodhi|gnani|vachana|prisma|timbre|evon", re.IGNORECASE)
+# "plivo" itself stays: it is also a phone provider that the Clients page names openly.
+_PROVIDER = re.compile(r"sarvam(ai)?|saaras|saarika|bulbul|navana|bodhi|gnani|vachana|prisma|timbre|evon|koyal", re.IGNORECASE)
 
 
 def public_error(text: str) -> str:

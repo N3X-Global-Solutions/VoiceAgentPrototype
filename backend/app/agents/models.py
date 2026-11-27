@@ -30,7 +30,7 @@ class AgentConfig(BaseModel):
     # One provider per part of the pipeline (see app/providers/catalog.py).
     stt_provider: Literal["sarvam", "navana", "gnani"] = "sarvam"
     llm_provider: Literal["sarvam", "gnani"] = "sarvam"
-    tts_provider: Literal["sarvam", "navana", "gnani"] = "sarvam"
+    tts_provider: Literal["sarvam", "navana", "gnani", "plivo"] = "sarvam"
     language: str = "en-IN"
     auto_detect_language: bool = False
     voice: str = "simran_enhi_customer"  # an id from the TTS provider's voice list

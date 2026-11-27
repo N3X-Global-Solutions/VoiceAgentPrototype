@@ -1,7 +1,7 @@
 """Which voice AI provider does what: languages, voices, models and prices.
 
 An agent picks one provider per part of the pipeline (speech recognition, AI model,
-voice). Everything provider-specific the rest of the app needs lives here, so adding a
+voice). Plivo offers a voice only. Everything provider-specific the rest of the app needs lives here, so adding a
 provider means one entry in PROVIDERS plus its Pipecat services in app/providers/.
 
 Prices are INR, before GST, and every one can be overridden in .env. "source" says
@@ -135,6 +135,82 @@ def _gnani_voices() -> list[dict]:
     return [{**v, "provider": "gnani"} for v in voices]
 
 
+# Plivo Koyal TTS (plivo.com/docs/models/text-to-speech/concepts/voices, Nov 2026). Each voice
+# speaks one language; "api_language" is the code Plivo's API takes for it. Plivo's Voices API
+# (GET /v1/Account/{auth_id}/TTS/Voices/) lists the current set if voices are added.
+PLIVO_TTS_MODEL = "koyal-v1"
+_PLIVO: dict[str, list[tuple[str, str, str, str]]] = {  # language -> (name, voice_id, gender, api_language)
+    "en-IN": [
+        ("Nisha", "H25SvwivznBqsIx1R7hX", "female", "en-IN"),
+        ("Prerna", "3gVUACYdS3ibtu8qPruB", "female", "en-IN"),
+        ("Aarav", "vGOW5Fzss7kzS9IxCObo", "male", "en-IN"),
+        ("Karan", "34AUgJTl9p1TLO99Mc7E", "male", "en-IN"),
+        ("Allison", "GhXTeeZNT1zacg9RUbXa", "female", "en-US"),
+        ("Hailey", "lC7qzMoRE7SSjaNCVeff", "female", "en-US"),
+        ("Garrett", "P2WNP5RVUP1t6dK9PY52", "male", "en-US"),
+        ("Terrell", "ieA6hQ563LgXTiOgy6kz", "male", "en-US"),
+        ("Travis", "Ak70ycoSdDYbeq5sAXsc", "male", "en-US"),
+        ("Eleanor", "Ic0DJ4TLN1ELIYmzwi6H", "female", "en-GB"),
+        ("Poppy", "0isEP1KMeZPsGSP5qj2A", "female", "en-GB"),
+        ("Archie", "zYmyWxqLSdlQ0MA4AQEV", "male", "en-GB"),
+        ("Tahlia", "S4OkXYkfzKK9f6wzmQ0X", "female", "en-AU"),
+    ],
+    "hi-IN": [
+        ("Meera", "6uWzc4xFj31t4jNJUaED", "female", "hi"),
+        ("Ritika", "Hiqcy02wuf8a4sCMcdNO", "female", "hi"),
+        ("Aman", "OmziUEKO4d83QuGMo3bP", "male", "hi"),
+        ("Ishaan", "nzWUWk5ShuIYGSosxESk", "male", "hi"),
+    ],
+    "bn-IN": [
+        ("Debasmita", "cZncSKHriH32h4IKwAF1", "female", "bn"),
+        ("Ishani", "GKrPm1RIxbJRv4yYqAxX", "female", "bn"),
+        ("Subhankar", "vxMrWeHTjRflUziEla6E", "male", "bn"),
+    ],
+    "ta-IN": [
+        ("Nandhini", "wDPugzmr5HSlFv9MaXk0", "female", "ta"),
+        ("Kathir", "4YwYWODqig98puWmLYRz", "male", "ta"),
+    ],
+    "te-IN": [
+        ("Abhiram", "v2jq1LG20JPbAVrlTWmZ", "male", "te"),
+        ("Pavan", "cXEjlQTYG6DCOlWVjGe9", "male", "te"),
+    ],
+    "mr-IN": [
+        ("Sanika", "KCWPtNGDMOQ5bI9SiaIm", "female", "mr"),
+        ("Shravani", "WqKlYdzJonf6PWElzV6a", "female", "mr"),
+        ("Akshay", "KYAauPOeeH6Xkcy9YBA7", "male", "mr"),
+        ("Mandar", "nBMKcKglpeBGawQWLrOa", "male", "mr"),
+    ],
+    "gu-IN": [
+        ("Hiren", "xHCIssLpg7mFHuxJAl5D", "male", "gu"),
+        ("Nirav", "9ZCJ1Lca7nXQprCrubMG", "male", "gu"),
+    ],
+    "kn-IN": [
+        ("Bhavana", "iNhbJlZPe4LFctxRtJPD", "female", "kn"),
+        ("Spoorthi", "Ba1rbMwhlf3aXyxKB99Q", "female", "kn"),
+        ("Pradeep", "JlZpUKXSnAs3C1qmfJR8", "male", "kn"),
+    ],
+}
+# English voices are grouped by accent; every other language has one group.
+_PLIVO_ACCENT = {"en-IN": "Indian accent", "en-US": "American accent", "en-GB": "British accent", "en-AU": "Australian accent"}
+
+
+@cache
+def _plivo_voices() -> list[dict]:
+    return [
+        {
+            "id": voice_id,
+            "name": name,
+            "style": gender,
+            "language": lang,
+            "group": _PLIVO_ACCENT.get(api_lang, LANGUAGES[lang]),
+            "api_language": api_lang,
+            "provider": "plivo",
+        }
+        for lang, entries in _PLIVO.items()
+        for name, voice_id, gender, api_lang in entries
+    ]
+
+
 # ---------------------------------------------------------------- providers
 
 
@@ -238,6 +314,21 @@ def providers() -> dict[str, dict]:
                 },
             },
         },
+        "plivo": {
+            "name": "Plivo",
+            # Two values: both must be set (see config.provider_api_key).
+            "key_env": "PLIVO_AUTH_ID and PLIVO_AUTH_TOKEN",
+            "tts": {
+                "model": PLIVO_TTS_MODEL,
+                "languages": list(_PLIVO),
+                "prices": {
+                    "chars": _price(
+                        "PRICE_PLIVO_TTS_PER_1K_CHARS", 0.65, "1k_chars", "published",
+                        "launch price ₹0.65 per minute of speech; Plivo counts 1,000 characters as a minute",
+                    )
+                },
+            },
+        },
     }
 
 
@@ -258,7 +349,7 @@ def part(provider: str, kind: Kind) -> dict | None:
 
 
 def voices(provider: str | None = None) -> list[dict]:
-    all_voices = _sarvam_voices() + _navana_voices() + _gnani_voices()
+    all_voices = _sarvam_voices() + _navana_voices() + _gnani_voices() + _plivo_voices()
     return [v for v in all_voices if provider is None or v["provider"] == provider]
 
 

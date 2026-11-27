@@ -29,10 +29,16 @@ NAVANA_STT_URL = os.getenv("NAVANA_STT_URL", "wss://stt.navana.ai")
 NAVANA_TTS_URL = os.getenv("NAVANA_TTS_URL", "https://tts.navana.ai/tts/bytes")
 # Gnani (Vachana) key from app.gnani.ai. Its AI model (Evon) needs early access.
 GNANI_API_KEY = os.getenv("GNANI_API_KEY", "")
+# Plivo voice (Koyal TTS): the Auth ID and Auth Token from console.plivo.com. This is the
+# workspace's own Plivo account; clients' Plivo phone numbers keep their own credentials.
+PLIVO_AUTH_ID = os.getenv("PLIVO_AUTH_ID", "").strip()
+PLIVO_AUTH_TOKEN = os.getenv("PLIVO_AUTH_TOKEN", "").strip()
 
 
 def provider_api_key(provider: str) -> str:
-    return {"sarvam": SARVAM_API_KEY, "navana": NAVANA_API_KEY, "gnani": GNANI_API_KEY}.get(provider, "")
+    """The provider's secret, or "" if it isn't fully configured (Plivo needs both of its values)."""
+    plivo = PLIVO_AUTH_TOKEN if PLIVO_AUTH_ID else ""
+    return {"sarvam": SARVAM_API_KEY, "navana": NAVANA_API_KEY, "gnani": GNANI_API_KEY, "plivo": plivo}.get(provider, "")
 
 # Public https base URL of this backend (ngrok / AWS). Needed only for phone calls,
 # because the telephony provider must reach our WebSocket from the internet.

@@ -19,6 +19,7 @@ from app.providers import catalog
 from app.providers.gnani import LLM_BASE_URL as GNANI_LLM_BASE_URL
 from app.providers.gnani import GnaniSTTService, GnaniTTSService
 from app.providers.navana import NavanaSTTService, NavanaTTSService, stt_model
+from app.providers.plivo import PlivoTTSService
 from app.voice.stt_preroll import PrerollSarvamRealtimeSTTService
 from app.voice.tts_text import tts_text_transform
 
@@ -118,6 +119,15 @@ def make_tts(cfg: AgentConfig, sample_rate: int) -> TTSService:
         return NavanaTTSService(voice=cfg.voice, language=cfg.language, pace=cfg.pace, sample_rate=sample_rate, text_transforms=transforms)
     if cfg.tts_provider == "gnani":
         return GnaniTTSService(
+            voice=cfg.voice,
+            language=cfg.language,
+            auto_detect=cfg.auto_detect_language,
+            pace=cfg.pace,
+            sample_rate=sample_rate,
+            text_transforms=transforms,
+        )
+    if cfg.tts_provider == "plivo":
+        return PlivoTTSService(
             voice=cfg.voice,
             language=cfg.language,
             auto_detect=cfg.auto_detect_language,
